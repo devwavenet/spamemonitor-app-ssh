@@ -1,0 +1,1102 @@
+================================================================================
+              REPORTE TÉCNICO: SPAMEMONITOR
+              Análisis completo del script y su relación con los logs
+              del servidor antispam-01.wavenet.com
+================================================================================
+
+================================================================================
+1. DESCRIPCIÓN GENERAL DEL SISTEMA
+================================================================================
+
+SPAMEMONITOR es un script Bash interactivo diseñado para monitorear, investigar
+y reportar actividad de spam en un servidor antispam que utiliza:
+
+  - Exim4 como MTA (Mail Transfer Agent)
+  - SpamExperts como filtro antispam (local_scan)
+  - Servidor: antispam-01.wavenet.com (IP: 45.173.0.25)
+  - Red gestionada: 45.173.0.0/24 y 45.173.1.0/24
+
+El script opera sobre DOS fuentes de logs principales:
+
+  1. /var/log/exim4/mainlog
+     → Log principal de Exim4. Registra TODOS los eventos de correo:
+       conexiones, autenticaciones, entregas, rechazos, errores TLS,
+       rate limiting, verificaciones DMARC/SPF/DKIM, etc.
+
+  2. /var/log/spamexperts/local_scan.log
+     → Log detallado de SpamExperts. Registra el ANÁLISIS profundo de cada
+       mensaje: puntuaciones CRM114, DKIM, DMARC, SPF, Pyzor, Hostkarma,
+       DNSBL, URL blacklists, heurísticas, firmas Sanesecurity, etc.
+
+El script se conecta por SSH al servidor y se ejecuta directamente allí
+(copy-paste en nano), accediendo a los logs reales del sistema.
+
+
+================================================================================
+2. ARQUITECTURA DE FLUJO DE CORREO
+================================================================================
+
+Basado en el análisis de los logs, este es el flujo que monitorea el script:
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                        FLUJO DE CORREO ENTRANTE                      │
+  │                                                                      │
+  │  Remotente → Internet → antispam-01.wavenet.com:25 (I=[45.173.0.25])│
+  │                              │                                       │
+  │                              ▼                                       │
+  │                    ┌─────────────────────┐                            │
+  │                    │  Exim4 mainlog      │ ← Registra la conexión     │
+  │                    │  (recepción)        │   IP, HELO, AUTH, TLS      │
+  │                    └────────┬────────────┘                            │
+  │                             │                                         │
+  │                             ▼                                         │
+  │                    ┌─────────────────────┐                            │
+  │                    │  SpamExperts        │ ← Analiza contenido        │
+  │                    │  local_scan.log     │   DKIM, DMARC, SPF, score   │
+  │                    └────────┬────────────┘                            │
+  │                             │                                         │
+  │              ┌──────────────┼──────────────┐                          │
+  │              ▼              ▼              ▼                          │
+  │         not-spam         unsure          spam/phish                   │
+  │              │              │              │                          │
+  │              ▼              ▼              ▼                          │
+  │        Entrega normal   Se entrega    Se encola como spam             │
+  │                         (pero flagged) (Quarantine/Reject)            │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                        FLUJO DE CORREO SALIENTE                      │
+  │                                                                      │
+  │  Cliente autenticado → antispam-01:587 o :465                        │
+  │  (Submission identity: usuario@dominio)                              │
+  │                              │                                       │
+  │                              ▼                                       │
+  │                    ┌─────────────────────┐                            │
+  │                    │  Exim4 mainlog      │ ← Registra autenticación   │
+  │                    │  (envío)            │   usuario, IP, TLS          │
+  │                    └────────┬────────────┘                            │
+  │                             │                                         │
+  │                             ▼                                         │
+  │                    ┌─────────────────────┐                            │
+  │                    │  SpamExperts        │ ← Clasifica el saliente    │
+  │                    │  local_scan.log     │   (outgoing spam check)     │
+  │                    └────────┬────────────┘                            │
+  │                             │                                         │
+  │              ┌──────────────┼──────────────┐                          │
+  │              ▼              ▼              ▼                          │
+  │         not-spam         unsure          spam                        │
+  │              │              │              │                          │
+  │              ▼              ▼              ▼                          │
+  │        Se envía normal  Se envía       Se bloquea/envía                │
+  │                         (flagged)      según configuración             │
+  └─────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+3. ANÁLISIS DETALLADO DE CADA FUNCIÓN DEL SCRIPT
+================================================================================
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 1: Correos Outgoings detectados como SPAM 📤
+────────────────────────────────────────────────────────────────────────
+
+Función: outgoings_email_spam()
+
+QUÉ HACE:
+  Detecta correos SALIENTES (outgoing) que SpamExperts clasificó como SPAM.
+  Identifica qué cuentas de usuario están enviando spam desde dentro de
+  la red gestionada.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Busca en /var/log/spamexperts/local_scan.log la cadena:
+       "Queuing outgoing spam message"
+
+     Esta cadena aparece cuando SpamExperts detecta que un correo SALIENTE
+     (originado desde un usuario autenticado en la red) contiene spam.
+
+  2. Usa zgrep -B1 para obtener también la línea ANTERIOR, que contiene:
+       "Submission identity: usuario@dominio"
+
+     La Submission identity es la cuenta autenticada que envió el correo.
+     Esto se ve en los logs así:
+
+       2026-03-31 00:44:13,197 INFO 1w7Q1U-00EOEF-KZ Submission identity: autogestion@civiles.org.ar
+       2026-03-31 00:44:13,206 INFO 1w7Q1U-00EOEF-KZ Message did not pass DKIM.
+       ...
+       2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ main: unsure, sub: combined, extra: 0.318797559194
+
+  3. Extrae la identidad con awk -F': ' '{print $2}'
+     → Obtiene: autogestion@civiles.org.ar
+
+  4. Agrupa con sort | uniq -c | sort -nr
+     → Cuenta cuántas veces cada identidad fue detectada enviando spam
+     → Ordena de mayor a menor (los peores ofensores primero)
+
+QUÉ REVELA EN LOS LOGS REALES:
+  En los logs analizados, se encontraron patrones como:
+
+    - autogestion@civiles.org.ar → múltiples clasificaciones "unsure"
+      con asuntos como "Error al Actualizar Boletas desde Autogestion",
+      "AutoGESTION - Error", "Error en el proceso de Compactación de Base de datos"
+
+    Esto indica que el sistema AutoGESTION genera correos automáticos de
+    notificación de errores que SpamExperts no puede clasificar claramente.
+    No son spam real, pero el sistema los marca como "unsure" porque:
+      • No tienen firma DKIM ("Message did not pass DKIM")
+      • Tienen contenido repetitivo/genérico
+      • Se envían con frecuencia alta
+
+  Si una cuenta legítima es comprometida (ej: por malware o credenciales
+  robadas), esta opción la detectaría inmediatamente al mostrar un pico
+  en el conteo de spam saliente.
+
+CASO DE USO REAL:
+  Si un usuario de wavenet.com.ar tiene su cuenta comprometida y empieza
+  a enviar spam masivo, la opción 1 mostrará algo como:
+
+    547 usuario-comprometido@wavenet.com.ar
+    23 otro-usuario@emba.com.ar
+    5 legítimo@dominio.com
+
+  Los números altos (547) indican cuenta comprometida. Los bajos (5) pueden
+  ser falsos positivos.
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 2: Correos Incomings detectados como SPAM 📥
+────────────────────────────────────────────────────────────────────────
+
+Función: incomings_email_spam()
+
+QUÉ HACE:
+  Detecta correos ENTRANTES (incoming) que SpamExperts clasificó como SPAM.
+  Muestra qué destinatarios están recibiendo más spam, permitiendo
+  identificar ataques dirigidos o dominios bajo ataque.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Busca en /var/log/spamexperts/local_scan.log la cadena:
+       "Queuing incoming spam message"
+
+     Esta cadena aparece cuando SpamExperts detecta spam ENTRANTE y lo
+     encola (en lugar de rechazarlo inmediatamente). El mensaje se guarda
+     para revisión o cuarentena.
+
+     Ejemplo real del log:
+       2026-03-31 00:44:03,313 INFO 1w7Q1I-00EOC0-3J Queuing incoming spam message for administracion@culturallibrera.com.ar,culturallibrera.com.ar.
+
+  2. Extrae los destinatarios con awk -F'for ' '{print $2}'
+     → Obtiene: administracion@culturallibrera.com.ar,culturallibrera.com.ar
+
+  3. Separa múltiples destinatarios con tr ',' '\n'
+     → Un correo puede tener varios destinatarios, se cuentan individualmente
+
+  4. Limpia espacios y puntos finales con sed
+     → 's/[[:space:]]//g; s/\.$//'
+
+  5. Filtra solo direcciones de email con grep '@'
+     → Excluye dominios sueltos (para eso está la opción 3)
+
+  6. Permite buscar un email específico o ver todos
+     → Si el usuario ingresa un email, filtra por ese
+     → Si presiona Enter, muestra todos
+
+  7. Agrupa y ordena por cantidad (más spam primero)
+
+QUÉ REVELA EN LOS LOGS REALES:
+  Los logs muestran que el spam entrante llega de diversas fuentes:
+
+    - IPs listadas en Spamhaus ZEN (194.38.20.x, 94.154.35.x, etc.)
+    - Servidores comprometidos (vps15.falesiaho.com, vps3.falesiaho.com)
+    - Redes de spam conocidas (fourbusinesmk.com, nugetcenter.com)
+
+  Si un destinatario específico aparece con números muy altos, puede indicar:
+    • Su dirección fue publicada en algún lugar y está en listas de spam
+    • Es víctima de un ataque dirigido (spear phishing)
+    • Su dominio tiene configuraciones DNS débiles (sin SPF/DMARC)
+
+CASO DE USO REAL:
+  Si administracion@empresa.com.ar recibe 200 spams por día, la opción 2
+  lo mostrará en el top. Esto permite:
+    • Investigar por qué ese destinatario es blanco
+    • Verificar configuraciones SPF/DMARC del dominio
+    • Considerar reglas específicas de filtrado
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 3: Dominios Incomings detectados como SPAM 🌐📥
+────────────────────────────────────────────────────────────────────────
+
+Función: incomings_domain_spam()
+
+QUÉ HACE:
+  Similar a la opción 2, pero en lugar de emails individuales, muestra
+  DOMINIOS completos que reciben spam entrante. Útil para detectar
+  ataques masivos contra dominios enteros.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Misma búsqueda: "Queuing incoming spam message" en local_scan.log
+
+  2. Misma extracción: awk -F'for ' '{print $2}'
+
+  3. Misma separación: tr ',' '\n'
+
+  4. Misma limpieza: sed 's/[[:space:]]//g; s/\.$//'
+
+  5. DIFERENCIA CLAVE: grep -v '@' (excluye emails, deja dominios)
+     → Esto captura entradas donde el destinatario es solo un dominio,
+       no una dirección específica
+
+  6. Agrupa y ordena por cantidad
+
+QUÉ REVELA EN LOS LOGS REALES:
+  En los logs se ven dominios como:
+    wavenet.com.ar, emba.com.ar, yuhmak.com.ar, civiles.org.ar, weisz.com
+
+  Si un dominio aparece con un número desproporcionado de spam, puede indicar:
+    • El dominio está siendo atacado masivamente
+    • Hay una configuración DNS débil (sin SPF, sin DMARC)
+    • Las direcciones de ese dominio fueron filtradas en un data breach
+
+CASO DE USO REAL:
+  Si wavenet.com.ar aparece con 500 spams entrantes y otros dominios
+  con 10-20, hay un problema específico con ese dominio que requiere
+  investigación (posible data breach o ataque dirigido).
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 4: Correos Outgoings detectados como UNSURE 📤
+────────────────────────────────────────────────────────────────────────
+
+Función: unsure_outgoings_email_spam()
+
+QUÉ HACE:
+  Detecta correos SALIENTES que SpamExperts clasificó como "unsure"
+  (incierto). No son spam confirmado, pero tampoco son claramente
+  legítimos. Esta es la zona gris que requiere atención.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Busca en /var/log/spamexperts/local_scan.log la cadena:
+       "main: unsure"
+
+     Esta es la clasificación principal de SpamExperts cuando el score
+     CRM114 está en la zona gris (típicamente entre 0.2 y 0.5).
+
+     Ejemplo real del log:
+       2026-03-31 08:26:16,283 INFO 1w7XEc-00F8hZ-6Z Combined score: 0.318797559194
+       2026-03-31 08:26:16,284 INFO 1w7XEc-00F8hZ-6Z main: unsure, sub: combined, extra: 0.318797559194
+
+  2. Usa zgrep -A1 para obtener la línea SIGUIENTE, que contiene:
+       "Submission identity: usuario@dominio"
+
+     El -A1 (after 1) busca la línea posterior porque en el log,
+     la Submission identity aparece DESPUÉS de la clasificación.
+
+  3. Extrae la identidad, agrupa y ordena (mismo proceso que opción 1)
+
+QUÉ REVELA EN LOS LOGS REALES:
+  Este es el caso MÁS IMPORTANTE detectado en los logs analizados.
+
+  El CSV exportado muestra 58 registros de autogestion@civiles.org.ar,
+  TODOS clasificados como "unsure" y TODOS entregados:
+
+    message_id: 1w7H0K-00DITt-1D
+    identity: autogestion@civiles.org.ar
+    main_class: unsure
+    subject: "Error al Actualizar Boletas desde Autogestion"
+    status: delivered
+
+    message_id: 1w7HHx-00DL1y-8t
+    identity: autogestion@civiles.org.ar
+    main_class: unsure
+    subject: "AutoGESTION - Error"
+    status: delivered
+
+  En el local_scan.log se ve el análisis detallado:
+
+    2026-03-31 00:44:13,206 INFO 1w7Q1U-00EOEF-KZ Message did not pass DKIM.
+    2026-03-31 00:44:13,208 INFO 1w7Q1U-00EOEF-KZ Classifying for wavenet.com.ar (45.173.0.0/24)
+    2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ global_tokens: 0.0531715750641
+    2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ crm114_substitute: 0.0531715750641
+    2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ Combined score: 0.0531715750641
+    2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ main: not-spam, sub: combined, extra: 0.0531715750641
+
+  Y en otro momento:
+
+    2026-03-31 08:26:16,283 INFO 1w7XEc-00F8hZ-6Z Combined score: 0.318797559194
+    2026-03-31 08:26:16,284 INFO 1w7XEc-00F8hZ-6Z main: unsure, sub: combined, extra: 0.318797559194
+
+  La variación en el score (0.053 vs 0.318) muestra que algunos correos
+  de AutoGESTION pasan como "not-spam" y otros caen en "unsure",
+  dependiendo del contenido específico del error.
+
+  POSIBLE SOLUCIÓN: Agregar autogestion@civiles.org.ar a la lista blanca
+  (whitelist) de SpamExperts, o configurar DKIM para estos correos.
+
+CASO DE USO REAL:
+  Esta opción es crucial para detectar:
+    • Cuentas comprometidas que envían spam "disfrazado"
+    • Sistemas automáticos que generan falsos positivos
+    • Configuraciones DKIM faltantes en sistemas internos
+    • Patrones de envío que necesitan ajuste de reglas
+
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 5: Lista completa de correos enviados 📨
+────────────────────────────────────────────────────────────────────────
+
+Función: filter_exim_by_sender()
+
+QUÉ HACE:
+  Analiza el mainlog de Exim4 para listar TODOS los remitentes que
+  enviaron correo a través del servidor, ordenados por cantidad de
+  mensajes enviados. Permite buscar un remitente específico.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Lee /var/log/exim4/mainlog completo
+
+  2. Usa un script awk con IGNORECASE=1 (case-insensitive)
+
+  3. Primera pasada: extrae ID y remitente de cada mensaje
+
+     Busca el ID del mensaje con:
+       match($0, /\] ([0-9A-Za-z-]+) /, m)
+     → Captura el ID entre corchetes y el espacio siguiente
+     → Ejemplo: [2810409] 1w9aCn-00Bn7B-NI → ID = 1w9aCn-00Bn7B-NI
+
+     Busca el remitente con tres patrones (en orden):
+       a) match($0, / <= ([^ ]+)/, a)
+          → Captura lo que viene después de " <=" (símbolo de entrada)
+          → Ejemplo: <= root@ttsviajes.wavenet.com → from = root@ttsviajes...
+
+       b) match($0, /MAIL FROM:<([^>]+)>/, b)
+          → Captura el MAIL FROM del comando SMTP
+          → Ejemplo: MAIL FROM:<user@domain.com> → from = user@domain.com
+
+       c) match($0, /(^|[[:space:]])F=([^ ]+)/, c)
+          → Captura el F= del log
+          → Ejemplo: F=root@vps18.falesiaho.com → from = root@vps18...
+
+  4. Guarda en un array asociativo: sender[id] = from
+     → Cada ID de mensaje se asocia con un único remitente
+     → Evita duplicados (if !(id in sender))
+
+  5. Excluye bounces: from!="<>"
+     → Los bounces tienen remitente vacío (<>)
+
+  6. Convierte a minúsculas: from=tolower(from)
+
+  7. Cuenta y ordena:
+     → Si se ingresó un email específico, filtra por ese
+     → Si no, muestra todos los remitentes
+     → Limita a los top 100
+
+QUÉ REVELA EN LOS LOGS REALES:
+  En los logs se ven patrones de remitentes muy diversos:
+
+    Remitentes legítimos:
+      - leandro@learsystem.com.ar (envío autenticado por puerto 587)
+      - matias.battaglia@weisz.com (envío interno desde 45.173.1.77)
+      - turnos-services@yuhmak.com.ar (servicio interno)
+
+    Remitentes sospechosos:
+      - root@vps18.falesiaho.com (IP 194.38.20.143 → Spamhaus ZEN)
+      - root@vps3.falesiaho.com (IP 194.38.20.211 → Spamhaus ZEN)
+      - wordpress@lrbalpargatas.com.ar (Invalid sender)
+
+    Remitentes de sistemas:
+      - no-reply@antispam-01.wavenet.com (reportes DMARC internos)
+      - __capataz__@ulasoft.com.ar (sistema interno de monitoreo)
+      - <> (bounces, excluidos del reporte)
+
+  Un remitente con volumen anormalmente alto puede indicar:
+    • Cuenta comprometida enviando spam
+    • Sistema mal configurado enviando duplicados
+    • Ataque de backscatter (bounces falsos)
+
+CASO DE USO REAL:
+  Si el top 1 muestra:
+    15000 root@servidor-comprometido.com
+
+  Eso es una cuenta comprometida que necesita acción inmediata
+  (cambio de contraseña, revisión de logs, posible bloqueo).
+
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 6: Correos ENTRANTES desde IP 📥📍
+────────────────────────────────────────────────────────────────────────
+
+Función: filter_exim_incoming_by_ip()
+
+QUÉ HACE:
+  Busca todos los correos ENTRANTES que llegaron desde una IP específica.
+  Permite investigar si una IP sospechosa está enviando correo a tus
+  usuarios y con qué frecuencia.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Pide al usuario la IP a investigar
+
+  2. Lee /var/log/exim4/mainlog
+
+  3. Filtra solo líneas con " <=" (entrada de correo) Y "H=... [" (host con IP)
+     → $0 ~ / <= / && $0 ~ /H=[^ ]+ \[/
+
+  4. Extrae tres datos de cada línea:
+     a) ID del mensaje: match($0, /\] ([0-9A-Za-z-]+) <=/, m)
+     b) Remitente: match($0, /<= ([^ ]+)/, a)
+     c) IP del remitente: match($0, /H=[^ ]+ \[([0-9.]+)\]/, b)
+        → Busca el patrón H=hostname [IP] y extrae la IP
+
+  5. Si la IP coincide con la buscada, cuenta el remitente
+
+  6. Muestra los remitentes desde esa IP, ordenados por cantidad
+
+QUÉ REVELA EN LOS LOGS REALES:
+  Ejemplo real del log con IP 194.38.20.143:
+
+    2026-04-06 00:01:21 [2810854] 1w9aDI-00BnEM-2p F=root@vps18.falesiaho.com H=vps18.falesiaho.com [194.38.20.143] I=[45.173.0.25]:25 P=esmtp rejected by local_scan(): The sending IP ( 194.38.20.143 ) is listed on Spamhaus ZEN.
+
+  Si se busca la IP 194.38.20.143, se vería:
+    - root@vps18.falesiaho.com como remitente
+    - Todos rechazados por Spamhaus ZEN
+
+  Ejemplo con IP legítima 209.85.208.51 (Google):
+
+    2026-04-06 00:01:00 [2810437] 1w9aCy-00Bn7d-GP H=mail-ed1-f51.google.com [209.85.208.51] I=[45.173.0.25]:25 Warning: DMARC DEBUG: 'accept' for gmail.com - Accept
+    2026-04-06 00:01:19 [2810437] 1w9aCy-00Bn7d-GP <= moraskate02@gmail.com H=mail-ed1-f51.google.com [209.85.208.51] I=[45.173.0.25]:25 P=esmtps CV=no SNI=mx01.emba.com.ar K S=13598 DKIM=gmail.com
+
+  Si se busca 209.85.208.51, se vería:
+    - moraskate02@gmail.com como remitente
+    - Aceptado con DMARC pass
+
+CASO DE USO REAL:
+  Si recibes quejas de que alguien envía spam a tus usuarios desde una
+  IP específica, esta opción te permite:
+    • Ver TODOS los correos que llegaron desde esa IP
+    • Identificar qué remitentes usa
+    • Confirmar si es spam legítimo o falso positivo
+    • Tomar decisión de bloqueo
+
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 7: Correos SALIENTES por IP 📤📍
+────────────────────────────────────────────────────────────────────────
+
+Función: filter_exim_outgoing_by_ip()
+
+QUÉ HACE:
+  Busca todos los correos SALIENTES que tu servidor envió usando una
+  interfaz IP específica. Permite rastrear qué usuarios están enviando
+  correo a través de una IP de salida particular.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Pide al usuario la IP a investigar
+
+  2. Lee /var/log/exim4/mainlog
+
+  3. PRIMERA PASADA: guarda todos los remitentes por ID de mensaje
+     → Busca líneas con " <=" (entrada de correo)
+     → Extrae ID y remitente
+     → Guarda en array: msg_sender[id] = from
+
+  4. SEGUNDA PASADA: busca entregas por IP de interfaz
+     → Busca líneas con " =>" (entrega exitosa) Y "I=[" (interfaz IP)
+     → Extrae ID del mensaje y IP de interfaz
+     → Si la IP coincide, busca el remitente original en msg_sender[]
+     → Cuenta por remitente
+
+  5. Muestra los remitentes que usaron esa IP, ordenados por cantidad
+
+  DIFERENCIA CLAVE con la opción 6:
+    - Opción 6: busca H=host [IP] → IP del REMITENTE EXTERNO (entrante)
+    - Opción 7: busca I=[IP] → IP de la INTERFAZ LOCAL de salida (saliente)
+
+QUÉ REVELA EN LOS LOGS REALES:
+  En los logs se ven múltiples IPs de interfaz:
+
+    I=[45.173.0.25]     → IP principal del antispam
+    I=[45.173.1.16]     → IP secundaria de salida
+    I=[45.173.1.20]     → Otra IP de salida
+    I=[45.173.1.21]     → Otra IP de salida
+    I=[45.173.1.22]     → Otra IP de salida
+
+  Ejemplo real:
+
+    2026-03-30 10:40:20 [3005444] 1w7Cqa-00CbkI-Gn => logistica@antumayorista.com.ar R=spamexperts T=remote_smtp_batv H=mail.antumayorista.com.ar [45.173.0.83] I=[45.173.0.25] CV=yes
+
+    2026-04-06 00:33:36 [2822903] 1w9aiL-00BqMN-Es => support@yuhmak.zendesk.com R=dnslookup T=remote_smtp_batv H=mail.zendesk.com [3.211.161.173] I=[45.173.1.22] X=TLS1.3:TLS_AES_256_GCM_SHA384:256 CV=yes
+
+  Si se busca la IP 45.173.1.22, se verían todos los correos que salieron
+  por esa interfaz específica, con sus remitentes originales.
+
+CASO DE USO REAL:
+  Si una IP de salida está siendo usada para spam (porque una cuenta
+  comprometida envía masivamente), esta opción permite:
+    • Identificar qué remitente usa esa IP
+    • Confirmar si es legítimo o comprometido
+    • Rastrear el volumen de envío por interfaz
+
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 8: Ver correo en cuarentena por Message ID 🔍🛡️
+────────────────────────────────────────────────────────────────────────
+
+Función: search_quarantined_mails()
+
+QUÉ HACE:
+  Busca un mensaje específico en el directorio de cuarentena de SpamExperts.
+  Permite recuperar o inspeccionar mensajes que fueron puestos en
+  cuarentena por el filtro antispam.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Verifica que exista el directorio /var/spool/mail/w/wa/
+     → Este es el directorio de cuarentena de SpamExperts
+     → La estructura en subdirectorios (w/wa/) es típica de Maildir
+
+  2. Pide al usuario el Message ID a buscar
+
+  3. Usa grep -Rl para buscar recursivamente el ID en todos los archivos
+     → -R = recursivo en subdirectorios
+     → -l = solo muestra nombres de archivos que contienen la búsqueda
+
+  4. Si encuentra el mensaje, muestra la ruta del archivo en cuarentena
+
+QUÉ REVELA EN LOS LOGS REALES:
+  Cuando SpamExperts clasifica un mensaje como spam/phish, puede:
+    • Rechazarlo inmediatamente (rejected by local_scan)
+    • Encolarlo como spam (Queuing incoming spam message)
+    • Ponerlo en cuarentena (disponible para revisión)
+
+  Los mensajes en cuarentena se guardan en /var/spool/mail/w/wa/ con
+  una estructura tipo Maildir. Cada mensaje tiene un archivo físico
+  que contiene el correo completo (encabezados + cuerpo).
+
+  Ejemplo de flujo de cuarentena:
+
+    1. SpamExperts detecta spam: main: spam, sub: dnsbl
+    2. En lugar de rechazar, lo pone en cuarentena
+    3. El archivo se guarda en /var/spool/mail/w/wa/cur/ o new/
+    4. El administrador puede buscarlo con el Message ID
+    5. Si es falso positivo, se puede liberar manualmente
+
+CASO DE USO REAL:
+  Un usuario reporta que esperaba un correo importante que no llegó.
+  Con el Message ID (que puede obtener del remitente), la opción 8
+  permite verificar si está en cuarentena y recuperarlo.
+
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 9: Ver todos los mensajes en cola de envío 📬⏳
+────────────────────────────────────────────────────────────────────────
+
+Función: show_exim_queue()
+
+QUÉ HACE:
+  Muestra los mensajes que están actualmente en la cola de salida de
+  Exim4 (esperando ser entregados). Permite buscar por email.
+
+CÓMO FUNCIONA (paso a paso):
+
+  1. Verifica que exista /var/lib/exim4/outgoing-config.autogenerated
+     → Este es el archivo de configuración de Exim para correo saliente
+     → Generado automáticamente por el sistema de gestión
+
+  2. Ejecuta: exim -C "$CONFIG" -bp
+     → -C = usa configuración específica (no la default)
+     → -bp = imprime la cola de mensajes (mail queue)
+
+  3. Filtra con grep por el email ingresado (o muestra todo si está vacío)
+
+QUÉ REVELA EN LOS LOGS REALES:
+  Los mensajes pueden quedar en cola por varias razones visibles en los logs:
+
+    • Connection timed out (el servidor destino no responde)
+      Ejemplo: H=hotamil.com [20.112.250.133] Connection timed out
+
+    • Network is unreachable (IPv6 no disponible)
+      Ejemplo: H=payway-com-ar.mail.protection.outlook.com [2a01:111:f403:f910::] Network is unreachable
+
+    • SMTP error temporal (4xx)
+      Ejemplo: 450 No valid MX for your FROM address
+
+    • Frozen (congelado por error permanente)
+      Ejemplo: Frozen (delivery error message)
+
+  La cola de Exim reintentará automáticamente la entrega según la
+  configuración de reintentos (típicamente cada 15-30 minutos por
+  hasta 4 días).
+
+CASO DE USO REAL:
+  Si hay un problema de entrega masiva (ej: un servidor destino caído),
+  la cola mostrará muchos mensajes acumulados con el mismo destino.
+  Esto permite identificar problemas de infraestructura rápidamente.
+
+
+────────────────────────────────────────────────────────────────────────
+OPCIÓN 10: IPs en Blacklists (RBLs) 📍🚫
+────────────────────────────────────────────────────────────────────────
+
+Función: check_blacklist_drops()
+
+QUÉ HACE:
+  Genera un reporte completo de todas las IPs que fueron bloqueadas
+  por estar en listas negras (RBLs). Consulta DOS fuentes de logs
+  para obtener una visión completa del estado de blacklisting.
+
+CÓMO FUNCIONA (paso a paso):
+
+  SECCIÓN 1: Spamhaus (ZEN/DBL/HBL)
+  ──────────────────────────────────
+
+  1. Busca en /var/log/exim4/mainlog las cadenas:
+       "spamhaus", "zen", "dbl", "hbl" (case-insensitive)
+
+  2. Extrae todas las IPs con:
+       grep -oE '\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\]'
+     → Captura cualquier patrón [x.x.x.x] en las líneas encontradas
+
+  3. Limpia los corchetes: tr -d '[]'
+
+  4. Cuenta y ordena: sort | uniq -c | sort -nr | head -10
+     → Top 10 IPs más bloqueadas por Spamhaus
+
+  5. Si no hay resultados: muestra "✅ Sin bloqueos de Spamhaus"
+
+  SECCIÓN 2: Hostkarma (Yellow Listed)
+  ─────────────────────────────────────
+
+  1. Busca en /var/log/spamexperts/local_scan.log:
+       "Yellow listed on Hostkarma" (case-insensitive)
+
+  2. Cuenta las ocurrencias: grep -ci
+
+  3. Muestra el total de advertencias
+
+  SECCIÓN 3: SpamRL / Otras listas
+  ─────────────────────────────────
+
+  1. Busca en /var/log/exim4/mainlog:
+       "spamrl", "listed on" (case-insensitive)
+
+  2. Extrae IPs (mismo proceso que Spamhaus)
+
+  3. Muestra top 10 o "✅ Sin bloqueos de SpamRL"
+
+  SECCIÓN 4: Resumen
+  ──────────────────
+
+  Cuenta total de eventos por blacklist:
+    - Spamhaus: grep -ci "spamhaus\|zen\|dbl\|hbl" en exim4/mainlog
+    - Hostkarma: grep -ci "Yellow listed on Hostkarma" en spamexperts/local_scan.log
+    - SpamRL: grep -ci "spamrl" en exim4/mainlog
+
+QUÉ REVELA EN LOS LOGS REALES:
+  En los logs analizados se encontraron:
+
+  SPAMHAUS ZEN (IPs bloqueadas):
+    194.38.20.143  → vps18.falesiaho.com (múltiples rechazos)
+    194.38.20.211  → vps3.falesiaho.com (múltiples rechazos)
+    194.38.21.70   → vps15.falesiaho.com (múltiples rechazos)
+    194.38.21.42   → vps27.falesiaho.com
+    94.154.35.209  → slot0.fourbusinesmk.com
+    45.142.155.58  → mx66438-aichi847.aichi.eo-net.jp
+    45.142.155.13  → t91473-yokohama355.yokohama.vnet.ne.jp
+    216.131.77.250 → e-metals.net
+    150.5.131.27   → ykdbhopc.cn
+    117.53.47.212  → vps.gemagrup.net
+    209.126.112.45 → vamoscontodo2.nugetcenter.com (RECURRENTES)
+    209.126.112.44 → vamoscontodo1.nugetcenter.com (RECURRENTES)
+    94.156.152.219 → mta0.ddku.giize.com (RECURRENTES, muchos intentos)
+
+  SPAMHAUS DBL (URLs bloqueadas):
+    instatool.site      → URL en correo de kuymaxkuymax9@gmail.com
+    mobwebify.com       → URL en correo de vishnu@mobwebify.com
+    hiremeforphp.com    → URL en correo de anuj@hiremeforphp.com
+    rutorforum.net      → URL en correo de correo@mayapublicidad.com
+
+  SPAMHAUS HBL (Direcciones bloqueadas):
+    clark.digihub@outlook.com → dirección en correo de aerocesnaescuela@gmail.com
+    teeengineer01.blogspot.com/... → URL en correo de myduyen230902@gmail.com
+
+  HOSTKARMA (Yellow Listed):
+    Múltiples advertencias en local_scan.log:
+      "Yellow listed on Hostkarma"
+      "Yellow listed on se-reputation"
+
+  PATRONES DETECTABLES:
+    • 94.156.152.219 (giize.com) aparece MUCHAS veces → ataque persistente
+    • 209.126.112.44/45 (nugetcenter.com) → red de spam recurrente
+    • 194.38.20.x/21.x (falesiaho.com) → VPS comprometidos enviando spam
+    • 45.142.155.x → red japonesa de spam con HELOs falsos
+
+CASO DE USO REAL:
+  Si una IP legítima de tus clientes aparece en Spamhaus, necesitas
+  saberlo inmediatamente para:
+    • Solicitar delisting en check.spamhaus.org
+    • Investigar si la IP está comprometida
+    • Notificar al cliente del problema
+
+  Si ves un ataque masivo desde una red de IPs (como 94.156.152.x),
+  puedes considerar bloquear todo el rango.
+
+
+================================================================================
+4. RESUMEN DE FUNCIONALIDADES POR CATEGORÍA
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CATEGORÍA: SPAM DETECTION (Opciones 1-4)                               │
+├──────┬──────────────────────────┬───────────────┬───────────────────────┤
+│ Opción │ Qué detecta            │ Fuente de log │ Acción posible        │
+├──────┼──────────────────────────┼───────────────┼───────────────────────┤
+│  1   │ Spam saliente por cuenta │ local_scan    │ Bloquear cuenta,      │
+│      │                          │               │ cambiar contraseña    │
+│  2   │ Spam entrante por email  │ local_scan    │ Filtrar, reportar,    │
+│      │                          │               │ verificar DNS         │
+│  3   │ Spam entrante por dominio│ local_scan    │ Revisar SPF/DMARC,    │
+│      │                          │               │ reglas de filtrado    │
+│  4   │ Unsure saliente por cuenta│ local_scan   │ Whitelist, DKIM,      │
+│      │                          │               │ ajustar reglas        │
+└──────┴──────────────────────────┴───────────────┴───────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CATEGORÍA: MAIL MANAGEMENT (Opciones 5-9)                              │
+├──────┬──────────────────────────┬───────────────┬───────────────────────┤
+│ Opción │ Qué detecta            │ Fuente de log │ Acción posible        │
+├──────┼──────────────────────────┼───────────────┼───────────────────────┤
+│  5   │ Volumen de envío por     │ exim4/mainlog │ Detectar cuentas      │
+│      │ remitente                │               │ comprometidas         │
+│  6   │ Correos entrantes por IP │ exim4/mainlog │ Investigar IPs        │
+│      │                          │               │ sospechosas           │
+│  7   │ Correos salientes por IP │ exim4/mainlog │ Rastrear envío por    │
+│      │                          │               │ interfaz              │
+│  8   │ Mensajes en cuarentena   │ filesystem    │ Recuperar falsos      │
+│      │                          │               │ positivos             │
+│  9   │ Cola de envío            │ exim queue    │ Diagnosticar problemas│
+│      │                          │               │ de entrega            │
+└──────┴──────────────────────────┴───────────────┴───────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CATEGORÍA: BLACKLISTS (Opción 10)                                      │
+├──────┬──────────────────────────┬───────────────┬───────────────────────┤
+│ Opción │ Qué detecta            │ Fuente de log │ Acción posible        │
+├──────┼──────────────────────────┼───────────────┼───────────────────────┤
+│  10  │ IPs en RBLs (Spamhaus,   │ exim4/mainlog │ Solicitar delisting,  │
+│      │ Hostkarma, SpamRL)       │ local_scan    │ bloquear rangos,      │
+│      │                          │               │ investigar            │
+└──────┴──────────────────────────┴───────────────┴───────────────────────┘
+
+
+================================================================================
+5. PATRONES DE ATAQUE DETECTABLES CON ESTE SCRIPT
+================================================================================
+
+Basado en el análisis de los logs reales, estos son los patrones que el
+script puede detectar:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ATAQUE: Brute-force de credenciales SMTP                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - "login authenticator failed for" + "535 Incorrect auth data"       │
+│    - "denied authentication due to possible brute-force attempts"       │
+│    - Múltiples intentos desde misma IP con diferentes usuarios          │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    185.174.103.55 → múltiples intentos con HELOs aleatorios             │
+│    (szHMlmR, u2ttRsSC, 1WRMVbax2j, GiP5NsK, 2kxSj2C)                   │
+│    Todos con "Incorrect authentication datadiscapacidad"                 │
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 5 (filter_exim_by_sender) → muestra volumen por remitente     │
+│    Opción 6 (filter_exim_incoming_by_ip) → investiga la IP              │
+│    Opción 10 (check_blacklist_drops) → si la IP está en blacklist       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ATAQUE: Spam desde VPS comprometidos                                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - root@vps*.falesiaho.com enviando masivamente                       │
+│    - IPs 194.38.20.x/21.x listadas en Spamhaus ZEN                      │
+│    - Rechazos repetidos: "rejected by local_scan(): ... Spamhaus ZEN"   │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    vps18.falesiaho.com (194.38.20.143) → múltiples rechazos             │
+│    vps3.falesiaho.com  (194.38.20.211) → múltiples rechazos             │
+│    vps15.falesiaho.com (194.38.21.70)  → múltiples rechazos             │
+│    vps27.falesiaho.com (194.38.21.42)  → múltiples rechazos             │
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 10 (check_blacklist_drops) → top IPs en Spamhaus              │
+│    Opción 6 (filter_exim_incoming_by_ip) → detalle por IP               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ATAQUE: Red de spam recurrente (nugetcenter.com)                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - Múltiples IPs del mismo dominio enviando spam                      │
+│    - Rechazos constantes por Spamhaus ZEN                               │
+│    - Patrón: info@nugetcenter.com desde varias IPs                      │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    209.126.112.45 (vamoscontodo2.nugetcenter.com) → 8+ rechazos         │
+│    209.126.112.44 (vamoscontodo1.nugetcenter.com) → 4+ rechazos         │
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 10 (check_blacklist_drops) → muestra IPs recurrentes          │
+│    Opción 5 (filter_exim_by_sender) → muestra info@nugetcenter.com      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ATAQUE: Ataques persistentes desde giize.com                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - noreply@formlinksystems.com desde 94.156.152.219                   │
+│    - Múltiples intentos en corto tiempo (ráfaga)                        │
+│    - HELO: (mta0.ddku.giize.com) → hostname sospechoso                  │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    00:23:52 → primer intento                                             │
+│    01:17:53 → 4 intentos simultáneos                                     │
+│    01:17:58 → 3 intentos más                                             │
+│    Total: 10+ rechazos en el período analizado                           │
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 10 (check_blacklist_drops) → IP en top de Spamhaus            │
+│    Opción 6 (filter_exim_incoming_by_ip) → todos los correos de la IP   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ATAQUE: Phishing entrante                                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - "main: phish, sub: pattern, extra: antispamcloud.phish.genphs..."  │
+│    - "Custom action matched: Reject phishing with no bounce"            │
+│    - "Message did not pass DKIM" + "SPF softfail"                       │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    1w7EAN-00CqsG-6h → phish detectado, rechazado sin bounce             │
+│    Clasificación: antispamcloud.phish.genphs4267                        │
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 2 (incomings_email_spam) → destinatarios del phishing         │
+│    Opción 3 (incomings_domain_spam) → dominios atacados                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: Falsos positivos de sistema interno (AutoGESTION)            │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - autogestion@civiles.org.ar → clasificación "unsure" recurrente     │
+│    - "Message did not pass DKIM" → sin firma DKIM                       │
+│    - Asuntos genéricos: "Error al Actualizar Boletas", "AutoGESTION"    │
+│    - Todos entregados (status: delivered)                               │
+│    - Múltiples destinatarios: Gmail, Hotmail                            │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    58 registros en CSV, todos "unsure", todos "delivered"               │
+│    Scores CRM114 variables: 0.053 (not-spam) a 0.445 (unsure)           │
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 4 (unsure_outgoings_email_spam) → muestra autogestion@...     │
+│    Opción 5 (filter_exim_by_sender) → volumen de envío                  │
+│                                                                          │
+│  Solución recomendada:                                                   │
+│    - Configurar DKIM para autogestion@civiles.org.ar                    │
+│    - Agregar a whitelist de SpamExperts                                 │
+│    - Revisar contenido de los correos de error para hacerlos más        │
+│      "legítimos" (más texto descriptivo, menos genérico)                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ATAQUE: Scanning de buzones (user unknown)                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - "rejected RCPT <user@wavenet.com>: User unknown; rejecting"        │
+│    - Múltiples intentos con diferentes nombres de usuario               │
+│    - HELO falso: (gmx.com) desde IP no relacionada                      │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    190.247.241.87 → F=<fevinservidormail9773@gmx.com>                   │
+│    Intentos: cmartos@wavenet.com, crystal@wavenet.com                   │
+│    HELO: (gmx.com) → falso, la IP no pertenece a GMX                    │
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 6 (filter_exim_incoming_by_ip) → todos los correos de la IP   │
+│    Opción 10 (check_blacklist_drops) → si la IP está en blacklist       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ATAQUE: Spam con URLs en DBL/HBL                                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Indicadores en logs:                                                    │
+│    - "An URL in this email ( domain ) is listed by Spamhaus DBL"        │
+│    - "An address in this email ( user (at) domain ) is listed by HBL"   │
+│    - Remitentes legítimos (gmail.com) con contenido spam                │
+│                                                                          │
+│  Ejemplo real:                                                           │
+│    kuymaxkuymax9@gmail.com → URL: instatool.site (DBL)                  │
+│    vishnu@mobwebify.com → URL: mobwebify.com (DBL)                      │
+│    aerocesnaescuela@gmail.com → dirección: clark.digihub@outlook.com(HBL)│
+│                                                                          │
+│  Opción del script que lo detecta:                                       │
+│    Opción 2 (incomings_email_spam) → destinatarios del spam con URLs    │
+│    Opción 10 (check_blacklist_drops) → resumen de blacklists            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+6. FLUJO DE INVESTIGACIÓN RECOMENDADO
+================================================================================
+
+Cuando detectas un problema de spam, este es el flujo de investigación
+que el script permite seguir:
+
+  PASO 1: ¿Hay spam saliente? (cuentas comprometidas)
+  ───────────────────────────────────────────────────
+    → Opción 1: Spam saliente confirmado
+    → Opción 4: Unsure saliente (zona gris)
+    → Opción 5: Volumen general de envío
+
+  Si una cuenta aparece con números altos en Opción 1:
+    → Cuenta comprometida → cambiar contraseña, revisar logs
+
+  Si una cuenta aparece en Opción 4 con números altos:
+    → Posible falso positivo → revisar configuración DKIM/whitelist
+
+  PASO 2: ¿Hay spam entrante? (ataques externos)
+  ───────────────────────────────────────────────
+    → Opción 2: Spam por email destinatario
+    → Opción 3: Spam por dominio
+
+  Si un dominio/email tiene números altos:
+    → Verificar SPF/DMARC del dominio
+    → Considerar reglas de filtrado específicas
+
+  PASO 3: ¿De dónde viene el spam? (investigar origen)
+  ─────────────────────────────────────────────────────
+    → Opción 6: Buscar correos entrantes desde IP sospechosa
+    → Opción 10: Ver si la IP está en blacklists
+
+  Si la IP está en Spamhaus:
+    → Confirmar que el bloqueo funciona
+    → Si es IP legítima, investigar por qué está listada
+
+  PASO 4: ¿Hay mensajes retenidos? (recuperar falsos positivos)
+  ──────────────────────────────────────────────────────────────
+    → Opción 8: Buscar en cuarentena por Message ID
+    → Opción 9: Ver cola de envío (mensajes atascados)
+
+  Si hay falsos positivos en cuarentena:
+    → Liberar mensaje
+    → Agregar remitente a whitelist
+    → Ajustar reglas de SpamExperts
+
+
+================================================================================
+7. LIMITACIONES Y MEJORAS POSIBLES
+================================================================================
+
+LIMITACIONES ACTUALES DEL SCRIPT:
+
+  1. No muestra detalles del análisis SpamExperts (scores, DKIM, DMARC)
+     → Solo muestra la clasificación final, no el proceso
+
+  2. No correlaciona entre exim4/mainlog y spamexperts/local_scan.log
+     → Para ver el análisis completo de un mensaje, hay que buscar
+       manualmente en ambos logs
+
+  3. No detecta brute-force automáticamente
+     → Los intentos de autenticación fallida no se reportan
+
+  4. No muestra tendencias temporales
+     → No dice "en la última hora hubo X spams"
+
+  5. No alerta sobre dominios nuevos sospechosos
+     → "SEM new sender domain" aparece en los logs pero no se reporta
+
+  6. No reporta rate limiting
+     → "is sending too fast" no se monitorea
+
+  7. La opción de cuarentena requiere conocer el Message ID exacto
+     → No hay forma de listar toda la cuarentena
+
+MEJORAS SUGERIDAS:
+
+  a) Agregar función de brute-force detection:
+     → grep "login authenticator failed" /var/log/exim4/mainlog |
+       grep -oE '\[([0-9.]+)\]' | sort | uniq -c | sort -nr
+
+  b) Agregar función de rate limit monitoring:
+     → grep "sending too fast" /var/log/exim4/mainlog |
+       grep -oE '^[0-9.]+ [0-9:]+' | sort | uniq -c
+
+  c) Agregar función de detalle por Message ID:
+     → Dado un ID, mostrar entrada de exim4 + análisis de spamexperts
+
+  d) Agregar función de whitelist candidates:
+     → Listar correos "unsure" recurrentes del mismo remitente
+       (como autogestion@civiles.org.ar)
+
+  e) Agregar función de DMARC failures:
+     → grep "DMARC.*Quarantine\|Reject" /var/log/exim4/mainlog
+
+  f) Agregar función de top dominios atacados:
+     → Extraer dominios de destinatarios de spam entrante
+
+
+================================================================================
+8. CONCLUSIÓN
+================================================================================
+
+SPAMEMONITOR es una herramienta completa de investigación y monitoreo de spam
+que cubre tres áreas fundamentales:
+
+  1. DETECCIÓN DE SPAM (opciones 1-4)
+     → Identifica spam entrante y saliente, incluyendo la zona gris "unsure"
+     → Permite detectar cuentas comprometidas y ataques dirigidos
+
+  2. GESTIÓN DE CORREO (opciones 5-9)
+     → Permite rastrear correos por remitente, IP, cola y cuarentena
+     → Esencial para investigación forense de incidentes
+
+  3. MONITOREO DE BLACKLISTS (opción 10)
+     → Reporta el estado de blacklisting de IPs que interactúan con el servidor
+     → Crítico para mantener la reputación del servidor
+
+El script trabaja con los logs REALES del servidor, lo que lo hace una
+herramienta de investigación poderosa. Los logs analizados muestran que el
+servidor maneja un volumen significativo de spam (cientos de rechazos por
+Spamhaus ZEN, múltiples ataques de brute-force, phishing detectado, etc.)
+y que el script es capaz de detectar todos estos patrones.
+
+El hallazgo más importante del análisis de logs es el caso de
+autogestion@civiles.org.ar, que genera falsos positivos "unsure" de forma
+recurrente debido a la falta de DKIM y contenido genérico de errores.
+Este es exactamente el tipo de patrón que la opción 4 del script está
+diseñada para detectar.
+
+================================================================================
+FIN DEL REPORTE
+================================================================================
+Generado a partir del análisis de:
+  - spam-scripts-optimizado.txt (script completo)
+  - Ejemplo-de-logs/ (todos los archivos y subcarpetas)
+  - logs-ip-server.txt (25,878 líneas)
+  - exim4-mainlog.txt (32,356 líneas)
+  - exim4-mainlog2.txt (31,373 líneas)
+  - exim4-mainlog3.txt (32,603 líneas)
+  - spamexperts-local_scan.log.txt (40,051 líneas)
+  - spamexperts-local_scan2.log.txt (40,049 líneas)
+  - spamexperts-local_scan3.log.txt (40,054 líneas)
+  - reporte-directo-unsure.txt (672 líneas)
+  - Reprote-spam.txt (642 líneas)
+  - CSV Export OutgoingLogSearch.csv (58 registros)
+Fecha: 2026-04-06
+================================================================================

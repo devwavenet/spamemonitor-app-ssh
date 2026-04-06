@@ -1,0 +1,474 @@
+#!/bin/bash
+
+# ============================================
+# SPAMEMONITOR - Monitor de Spam para Exim/SpamExperts
+# ============================================
+# Script optimizado para ejecutar por SSH (copy-paste en nano)
+# ============================================
+
+# ============================================
+# CONFIGURACIÓN DE LOCALE (Evita warnings de awk)
+# ============================================
+export LC_ALL=C.UTF-8 2>/dev/null || export LC_ALL=C
+
+# ============================================
+# COLORES
+# ============================================
+COLOR_YELLOW='\033[0;33m'
+COLOR_RED='\033[0;31m'
+COLOR_GREEN='\033[0;32m'
+COLOR_BLUE='\033[0;34m'
+COLOR_CYAN='\033[0;36m'
+COLOR_WHITE='\033[0;37m'
+COLOR_BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+###############################################
+# OPCIÓN - OUTGOINGS SPAM
+###############################################
+outgoings_email_spam() {
+  echo -e "\n${COLOR_YELLOW}=== Correos detectados como SPAM -> Outgoings Correos ===${NC}\n"
+
+  local LOG="/var/log/spamexperts/local_scan.log"
+
+  if [[ ! -f "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log no encontrado: $LOG${NC}"
+    return 1
+  fi
+
+  if [[ ! -s "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log vacío: $LOG${NC}"
+    return 1
+  fi
+
+  zgrep -B1 "Queuing outgoing spam message" "$LOG" \
+    | grep "Submission identity" \
+    | awk -F': ' '{print $2}' \
+    | sort | uniq -c | sort -nr \
+    | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}'
+
+  echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
+}
+
+###############################################
+# OPCIÓN - INCOMINGS SPAM
+###############################################
+incomings_email_spam() {
+  echo -e "\n${COLOR_YELLOW}=== Correos detectados como SPAM -> Incoming Correos ===${NC}\n"
+
+  local LOG="/var/log/spamexperts/local_scan.log"
+
+  if [[ ! -f "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log no encontrado: $LOG${NC}"
+    return 1
+  fi
+
+  if [[ ! -s "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log vacío: $LOG${NC}"
+    return 1
+  fi
+
+  read -p "Ingrese el correo electrónico a buscar (o presione Enter para ver todos): " email_input
+
+  zgrep "Queuing incoming spam message" "$LOG" \
+    | awk -F'for ' '{print $2}' \
+    | tr ',' '\n' \
+    | sed 's/[[:space:]]//g; s/\.$//' \
+    | grep '@' \
+    | sort | uniq -c | sort -nr \
+    | awk -v email="$email_input" -v y="$COLOR_YELLOW" -v n="$NC" '
+      {
+        if (email == "" || index($2, email) > 0) {
+          printf "%s%d%s %s\n", y, $1, n, $2
+        }
+      }'
+
+  echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
+}
+
+###############################################
+# OPCIÓN - INCOMINGS DOMINIOS
+###############################################
+incomings_domain_spam() {
+  echo -e "\n${COLOR_YELLOW}=== Correos detectados como SPAM -> Incoming Dominios ===${NC}\n"
+
+  local LOG="/var/log/spamexperts/local_scan.log"
+
+  if [[ ! -f "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log no encontrado: $LOG${NC}"
+    return 1
+  fi
+
+  if [[ ! -s "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log vacío: $LOG${NC}"
+    return 1
+  fi
+
+  zgrep "Queuing incoming spam message" "$LOG" \
+    | awk -F'for ' '{print $2}' \
+    | tr ',' '\n' \
+    | sed 's/[[:space:]]//g; s/\.$//' \
+    | grep -v '@' \
+    | sort | uniq -c | sort -nr \
+    | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}'
+
+  echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
+}
+
+###############################################
+# OPCIÓN - UNSURE OUTGOINGS SPAM
+###############################################
+unsure_outgoings_email_spam() {
+  echo -e "\n${COLOR_YELLOW}=== Correos detectados como UNSURE -> Outgoings Correos ===${NC}\n"
+
+  local LOG="/var/log/spamexperts/local_scan.log"
+
+  if [[ ! -f "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log no encontrado: $LOG${NC}"
+    return 1
+  fi
+
+  if [[ ! -s "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log vacío: $LOG${NC}"
+    return 1
+  fi
+
+  # Busca líneas con "Submission identity" en mensajes clasificados como "unsure"
+  # La Submission identity aparece justo después de "main: unsure" en el log
+  zgrep "main: unsure" "$LOG" -A1 \
+    | grep "Submission identity" \
+    | awk -F': ' '{print $2}' \
+    | sort | uniq -c | sort -nr \
+    | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}'
+
+  echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
+}
+
+
+###############################################
+# LISTA DE CORREOS ENVIADOS COMPLETOS + BUSQUEDA ESPECIFICA
+###############################################
+filter_exim_by_sender() {
+  echo -e "\n${COLOR_YELLOW}=== Correos enviados por remitente específico ===${NC}\n"
+
+  # Solicita al usuario que ingrese un correo electrónico (puede dejarlo vacío)
+  read -p "Ingrese el correo electrónico a buscar (o presione Enter para ver todos los correos): " email_input
+
+  # Log de Exim
+  local LOG="/var/log/exim4/mainlog"
+  
+  if [[ ! -f "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log no encontrado: $LOG${NC}"
+    return 1
+  fi
+
+  # Analiza el log de Exim para obtener los correos enviados y el remitente.
+  awk -v email="$email_input" '
+  BEGIN{IGNORECASE=1}
+  {
+    id=""; from="";
+
+    # Extrae el ID del mensaje
+    if (match($0, /\] ([0-9A-Za-z-]+) /, m)) id=m[1];
+
+    # Extrae el remitente del mensaje
+    if (match($0, / <= ([^ ]+)/, a)) from=a[1];
+    else if (match($0, /MAIL FROM:<([^>]+)>/, b)) from=b[1];
+    else if (match($0, /(^|[[:space:]])F=([^ ]+)/, c)) from=c[2];
+
+    # Si se encontró el ID y el remitente, lo guarda en un array
+    if (id!="" && from!="" && from!="<>") {
+      from=tolower(from);
+      if (!(id in sender)) sender[id]=from;
+    }
+  }
+  END{
+    # Si el correo no está vacío, filtra por el correo ingresado
+    if (email != "") {
+      for (i in sender) {
+        if (index(sender[i], email) > 0) {
+          count[sender[i]]++;
+        }
+      }
+    }
+    # Si el correo está vacío, cuenta todos los envíos
+    else {
+      for (i in sender) {
+        count[sender[i]]++;
+      }
+    }
+
+    # Muestra los correos filtrados por remitente
+    for (s in count) print count[s], s;
+  }
+  ' "$LOG" | sort -nr | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}' | head -100
+
+  echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
+}
+
+###############################################
+# BUSCAR CORREOS ENTRANTES POR IP (H=host [IP])
+###############################################
+filter_exim_incoming_by_ip() {
+  echo -e "\n${COLOR_YELLOW}=== Correos ENTRANTES desde IP - H=host [IP] ===${NC}\n"
+  echo -e "${COLOR_CYAN}Muestra correos que tu servidor RECIBIÓ desde una IP específica${NC}\n"
+
+  read -p "Ingrese la IP a buscar: " ip_input
+
+  local LOG="/var/log/exim4/mainlog"
+
+  if [[ ! -f "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log no encontrado: $LOG${NC}"
+    return 1
+  fi
+
+  awk -v ip="$ip_input" '
+  BEGIN { IGNORECASE=1 }
+
+  $0 ~ / <= / && $0 ~ /H=[^ ]+ \[/ {
+      id=""; from=""; from_ip="";
+
+      if (match($0, /\] ([0-9A-Za-z-]+) <=/, m)) id=m[1];
+      if (match($0, /<= ([^ ]+)/, a)) from=tolower(a[1]);
+      if (match($0, /H=[^ ]+ \[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\]/, b)) from_ip=b[1];
+
+      if (from_ip==ip && from!="") {
+          count[from]++;
+      }
+  }
+
+  END {
+      for (s in count) {
+          print count[s], s;
+      }
+  }
+  ' "$LOG" | sort -nr | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}' | head -100
+
+  echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
+}
+
+###############################################
+# BUSCAR CORREOS SALIENTES POR IP (I=[IP])
+###############################################
+filter_exim_outgoing_by_ip() {
+  echo -e "\n${COLOR_YELLOW}=== Correos SALIENTES por IP - I=[IP] ===${NC}\n"
+  echo -e "${COLOR_CYAN}Muestra correos que tu servidor ENVIÓ usando una interfaz específica${NC}\n"
+
+  read -p "Ingrese la IP a buscar: " ip_input
+
+  local LOG="/var/log/exim4/mainlog"
+
+  if [[ ! -f "$LOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Log no encontrado: $LOG${NC}"
+    return 1
+  fi
+
+  awk -v ip="$ip_input" '
+  BEGIN { IGNORECASE=1 }
+
+  # Primera pasada: guardar todos los remitentes por ID de mensaje
+  $0 ~ / <= / {
+      id=""; from="";
+
+      if (match($0, /\] ([0-9A-Za-z-]+) <=/, m)) id=m[1];
+      if (match($0, /<= ([^ ]+)/, a)) from=tolower(a[1]);
+
+      if (id!="" && from!="") {
+          msg_sender[id] = from;
+      }
+  }
+
+  # Segunda pasada: buscar entregas por IP de interfaz
+  $0 ~ / => / && $0 ~ /I=\[/ {
+      id=""; iface_ip="";
+
+      if (match($0, /\] ([0-9A-Za-z-]+) =>/, m)) id=m[1];
+      if (match($0, /I=\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\]/, c)) iface_ip=c[1];
+
+      if (iface_ip==ip && id!="" && id in msg_sender) {
+          from = msg_sender[id];
+          count[from]++;
+      }
+  }
+
+  END {
+      for (s in count) {
+          print count[s], s;
+      }
+  }
+  ' "$LOG" | sort -nr | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}' | head -100
+
+  echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
+}
+
+###############################################
+# VER TODOS LOS MENSAJES EN COLA (LISTA DE ESPERA PARA ENVIAR)
+###############################################
+show_exim_queue() {
+  echo -e "\n${COLOR_YELLOW}=== Correos en cola de salida ===${NC}\n"
+
+  read -p "Ingrese el correo electrónico a buscar (o presione Enter para ver todos los correos en cola de salida): " correo
+
+  local CONFIG="/var/lib/exim4/outgoing-config.autogenerated"
+
+  if [[ ! -f "$CONFIG" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Config de Exim no encontrada: $CONFIG${NC}"
+    return 1
+  fi
+
+  exim -C "$CONFIG" -bp 2>/dev/null | grep "$correo"
+
+  echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
+}
+
+###############################################
+# BUSCAR CORREOS EN CUARENTENA
+###############################################
+search_quarantined_mails() {
+  echo -e "\n${COLOR_YELLOW}=== Búsqueda de correos en cuarentena ===${NC}\n"
+
+  local QUARANTINE_DIR="/var/spool/mail/w/wa/"
+
+  if [[ ! -d "$QUARANTINE_DIR" ]]; then
+    echo -e "${COLOR_RED}⚠️  Error: Directorio de cuarentena no encontrado: $QUARANTINE_DIR${NC}"
+    return 1
+  fi
+
+  read -p "Ingrese el Message ID para buscar el correo en cuarentena: " busqueda
+
+  if [[ -z "$busqueda" ]]; then
+    echo -e "${COLOR_RED}⚠️  No ingresó ningún término de búsqueda.${NC}"
+    return 1
+  fi
+
+  grep -Rl "$busqueda" "$QUARANTINE_DIR" 2>/dev/null
+
+  echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
+}
+
+###############################################
+# CHECK BLACKLIST DROPS
+###############################################
+check_blacklist_drops() {
+  echo -e "\n${COLOR_RED}=== Bloqueos por Blacklists (RBLs) ===${NC}\n"
+
+  local EXIMLOG="/var/log/exim4/mainlog"
+  local SPAMLOG="/var/log/spamexperts/local_scan.log"
+
+  if [[ ! -f "$EXIMLOG" ]] && [[ ! -f "$SPAMLOG" ]]; then
+    echo -e "${COLOR_RED}⚠️  No se encontraron los logs necesarios${NC}"
+    echo "  Verificar:"
+    echo "    - $EXIMLOG"
+    echo "    - $SPAMLOG"
+    return 1
+  fi
+
+  echo -e "\n${COLOR_YELLOW}🚫 Spamhaus (ZEN/DBL/HBL):${NC}"
+  if [[ -f "$EXIMLOG" ]]; then
+    local spamhaus_result
+    spamhaus_result=$(grep -i "spamhaus\|zen\|dbl\|hbl" "$EXIMLOG" 2>/dev/null | \
+    sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
+    sort | uniq -c | sort -nr | head -10)
+
+    if [[ -n "$spamhaus_result" ]]; then
+      echo "$spamhaus_result" | awk '{printf "  %d bloqueos - IP: %s\n", $1, $2}'
+    else
+      echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de Spamhaus${NC}"
+    fi
+  else
+    echo -e "  ${COLOR_RED}⚠️  Log de Exim no disponible${NC}"
+  fi
+
+  echo -e "\n${COLOR_YELLOW}🟡 Hostkarma (Yellow Listed):${NC}"
+  if [[ -f "$SPAMLOG" ]]; then
+    local hostkarma_count
+    hostkarma_count=$(grep -ci "Yellow listed on Hostkarma" "$SPAMLOG" 2>/dev/null || echo 0)
+    echo "  Total advertencias: $hostkarma_count"
+  else
+    echo -e "  ${COLOR_RED}⚠️  Log de SpamExperts no disponible${NC}"
+  fi
+
+  echo -e "\n${COLOR_YELLOW}🔴 SpamRL / Otras listas:${NC}"
+  if [[ -f "$EXIMLOG" ]]; then
+    local spamrl_result
+    spamrl_result=$(grep -i "spamrl\|listed on" "$EXIMLOG" 2>/dev/null | \
+    sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
+    sort | uniq -c | sort -nr | head -10)
+
+    if [[ -n "$spamrl_result" ]]; then
+      echo "$spamrl_result" | awk '{printf "  %d - IP: %s\n", $1, $2}'
+    else
+      echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de SpamRL${NC}"
+    fi
+  else
+    echo -e "  ${COLOR_RED}⚠️  Log de Exim no disponible${NC}"
+  fi
+
+  echo -e "\n${COLOR_YELLOW}📊 Resumen de Blacklists:${NC}"
+  local spamhaus_count=0 hostkarma_count=0 spamrl_count=0
+  
+  if [[ -f "$EXIMLOG" ]]; then
+    spamhaus_count=$(grep -ci "spamhaus\|zen\|dbl\|hbl" "$EXIMLOG" 2>/dev/null || echo 0)
+    spamrl_count=$(grep -ci "spamrl" "$EXIMLOG" 2>/dev/null || echo 0)
+  fi
+  if [[ -f "$SPAMLOG" ]]; then
+    hostkarma_count=$(grep -ci "Yellow listed on Hostkarma" "$SPAMLOG" 2>/dev/null || echo 0)
+  fi
+
+  echo "  Spamhaus: $spamhaus_count eventos"
+  echo "  Hostkarma: $hostkarma_count eventos"
+  echo "  SpamRL: $spamrl_count eventos"
+
+  echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
+}
+
+
+###############################################
+# MENU
+###############################################
+while true; do
+  clear
+  echo -e "${COLOR_BOLD}=================================${NC}"
+  echo -e "${COLOR_BOLD}   SPAMEMONITOR - MENU${NC}"
+  echo -e "${COLOR_BOLD}=================================${NC}"
+  echo ""
+  echo -e "${COLOR_CYAN}--- SPAM DETECTION ---${NC}"
+  echo "1) Correos Outgoings detectados como SPAM 📤"
+  echo "2) Correos Incomings detectados como SPAM 📥"
+  echo "3) Dominios Incomings detectados como SPAM 🌐📥"
+  echo "4) Correos Outgoings detectados como UNSURE 📤"
+  echo ""
+  echo -e "${COLOR_CYAN}--- MAIL MANAGEMENT ---${NC}"
+  echo "5) Lista completa de correos enviados 📨"
+  echo "6) Correos ENTRANTES desde IP 📥📍"
+  echo "7) Correos SALIENTES por IP 📤📍"
+  echo "8) Ver correo en cuarentena por Message ID 🔍🛡️"
+  echo "9) Ver todos los mensajes en cola de envío  📬⏳"
+  echo ""
+  echo -e "${COLOR_CYAN}--- BLACKLISTS ---${NC}"
+  echo "10) IPs en Blacklists (RBLs) 📍🚫"
+  echo ""
+  echo "0) Salir"
+  echo ""
+
+  read -p "Elegí una opción: " option
+
+  case $option in
+
+    1) outgoings_email_spam ;;
+    2) incomings_email_spam ;;
+    3) incomings_domain_spam ;;
+    4) unsure_outgoings_email_spam ;;
+    5) filter_exim_by_sender ;;
+    6) filter_exim_incoming_by_ip ;;
+    7) filter_exim_outgoing_by_ip ;;
+    8) search_quarantined_mails ;;
+    9) show_exim_queue ;;
+    10) check_blacklist_drops ;;
+    0) echo -e "${COLOR_GREEN}¡Adiós! 👋${NC}"; exit 0 ;;
+    *) echo -e "${COLOR_RED}Opción inválida${NC}" ;;
+  esac
+
+  echo ""
+  read -p "Presioná Enter para volver al menú..."
+done

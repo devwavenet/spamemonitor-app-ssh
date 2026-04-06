@@ -1,0 +1,672 @@
+root@antispam-01.wavenet.com ~ # grep -C 5 "autogestion@civiles.org.ar" /var/log/spamexperts/local_scan.log
+2026-03-31 00:44:03,180 INFO 1w7Q1I-00EOC0-3J main: spam, sub: dnsbl, extra: sh-zen.rbl.spamrl.com
+2026-03-31 00:44:03,313 INFO 1w7Q1I-00EOC0-3J Queuing incoming spam message for administracion@culturallibrera.com.ar,culturallibrera.com.ar.
+2026-03-31 00:44:03,317 INFO 1w7Q1I-00EOC0-3J Handled message in 2.8232 seconds.
+2026-03-31 00:44:03,394 INFO 1w7Q1I-00EOC0-3J New garbage after cleanup: 0
+2026-03-31 00:44:13,020 INFO 1w7Q1U-00EOEF-KZ Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 00:44:13,197 INFO 1w7Q1U-00EOEF-KZ Submission identity: autogestion@civiles.org.ar
+2026-03-31 00:44:13,204 INFO 1w7Q1U-00EOEF-KZ Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 00:44:13,204 INFO 1w7Q1U-00EOEF-KZ Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 00:44:13,206 INFO 1w7Q1U-00EOEF-KZ Message did not pass DKIM.
+2026-03-31 00:44:13,208 INFO 1w7Q1U-00EOEF-KZ Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3429731
+2026-03-31 00:44:13,224 INFO 1w7Q1U-00EOEF-KZ Flag file says that strict-from-count is active.
+--
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ sa-filter-active is not set.
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ global_tokens: 0.0531715750641
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ crm114_substitute: 0.0531715750641
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ Combined score: 0.0531715750641
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ main: not-spam, sub: combined, extra: 0.0531715750641
+2026-03-31 00:44:18,202 INFO 1w7Q1U-00EOEF-KZ Submission identity: autogestion@civiles.org.ar
+2026-03-31 00:44:18,211 INFO 1w7Q1U-00EOEF-KZ Handled message in 5.1985 seconds.
+2026-03-31 00:44:18,290 INFO 1w7Q1U-00EOEF-KZ New garbage after cleanup: 0
+2026-03-31 00:44:38,103 INFO 1w7Q1t-00EOEe-LC No sender address. Message may be a bounce
+2026-03-31 00:44:39,206 INFO 1w7Q1t-00EOEe-LC Skip loading username options 
+2026-03-31 00:44:39,206 INFO 1w7Q1t-00EOEe-LC Submission identity: 
+--
+2026-03-31 08:26:14,752 INFO 1w7XEa-00F8hL-Fb DKIM result: 'none' / '' / 'bounce.mediaware-news.com' / '' / '' / ''
+2026-03-31 08:26:14,752 INFO 1w7XEa-00F8hL-Fb DKIM result: 'pass' / '' / 'embluerpg.com' / 'embluerpg.com' / '' / 'epexo'
+2026-03-31 08:26:14,753 INFO 1w7XEa-00F8hL-Fb Flag file says that strict-from-count is active.
+2026-03-31 08:26:14,753 INFO 1w7XEa-00F8hL-Fb Flag file says that strict-from-count is active.
+2026-03-31 08:26:14,755 INFO 1w7XEa-00F8hL-Fb This message has gone through us 0 times.
+2026-03-31 08:26:14,780 INFO 1w7XEc-00F8hZ-6Z Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:26:14,786 INFO 1w7XEc-00F8hZ-6Z Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:26:14,786 INFO 1w7XEc-00F8hZ-6Z Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:26:14,789 INFO 1w7XEc-00F8hZ-6Z Message did not pass DKIM.
+2026-03-31 08:26:14,791 INFO 1w7XEc-00F8hZ-6Z Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3608373
+2026-03-31 08:26:14,808 INFO 1w7XEc-00F8hZ-6Z Flag file says that strict-from-count is active.
+--
+2026-03-31 08:26:16,283 INFO 1w7XEc-00F8hZ-6Z sa-filter-active is not set.
+2026-03-31 08:26:16,283 INFO 1w7XEc-00F8hZ-6Z global_tokens: 0.318797559194
+2026-03-31 08:26:16,283 INFO 1w7XEc-00F8hZ-6Z crm114_substitute: 0.318797559194
+2026-03-31 08:26:16,283 INFO 1w7XEc-00F8hZ-6Z Combined score: 0.318797559194
+2026-03-31 08:26:16,284 INFO 1w7XEc-00F8hZ-6Z main: unsure, sub: combined, extra: 0.318797559194
+2026-03-31 08:26:16,290 INFO 1w7XEc-00F8hZ-6Z Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:26:16,305 INFO 1w7XEc-00F8hZ-6Z Handled message in 1.7125 seconds.
+2026-03-31 08:26:16,373 INFO 1w7XEc-00F8hZ-6Z New garbage after cleanup: 0
+2026-03-31 08:26:18,287 INFO 1w7XEa-00F8hL-Fb Found instruction at se-urlyl2 to skip URLBL check for donweb.com: ['127.0.0.2']
+2026-03-31 08:26:18,435 INFO 1w7XEa-00F8hL-Fb Found instruction at se-urlyl2 to skip URLBL check for www.embluemail.com: ['127.0.0.2']
+2026-03-31 08:26:18,437 INFO 1w7XEa-00F8hL-Fb Found instruction at se-urlyl2 to skip URLBL check for nts.embluemail.com: ['127.0.0.2']
+--
+2026-03-31 08:30:07,265 INFO 1w7XIM-00F9A7-SE Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:30:07,402 INFO 1w7XIN-00F9AN-03 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:30:07,404 INFO 1w7XIN-00F9AN-03 Locally generated message
+2026-03-31 08:30:07,404 INFO 1w7XIN-00F9AN-03 Handled message in 0.0152 seconds.
+2026-03-31 08:30:07,443 INFO 1w7XIN-00F9AN-03 New garbage after cleanup: 0
+2026-03-31 08:30:07,446 INFO 1w7XIM-00F9A7-SE Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:30:07,452 INFO 1w7XIM-00F9A7-SE Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:30:07,453 INFO 1w7XIM-00F9A7-SE Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:30:07,455 INFO 1w7XIM-00F9A7-SE Message did not pass DKIM.
+2026-03-31 08:30:07,457 INFO 1w7XIM-00F9A7-SE Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3610143
+2026-03-31 08:30:07,472 INFO 1w7XIM-00F9A7-SE Flag file says that strict-from-count is active.
+--
+2026-03-31 08:30:08,091 INFO 1w7XIM-00F9A7-SE Combined score: 0.445370617377
+2026-03-31 08:30:08,092 INFO 1w7XIM-00F9A7-SE main: unsure, sub: combined, extra: 0.445370617377
+2026-03-31 08:30:08,095 INFO 1w7XIK-00F95S-RT renault.com found on dkimwl url-14.rbl.spamrl.com: category 13, trust 5 ()
+2026-03-31 08:30:08,098 INFO 1w7XIK-00F95S-RT Message has List-ID header, so looks like it's from a list.
+2026-03-31 08:30:08,098 INFO 1w7XIK-00F95S-RT Classifying for pergaminovirtual.com.ar in pid 3609854
+2026-03-31 08:30:08,102 INFO 1w7XIM-00F9A7-SE Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:30:08,113 INFO 1w7XIM-00F9A7-SE Handled message in 0.8552 seconds.
+2026-03-31 08:30:08,184 INFO 1w7XIM-00F9A7-SE New garbage after cleanup: 0
+2026-03-31 08:30:08,426 INFO 1w7XIK-00F95S-RT DMARC recommendation: accept
+2026-03-31 08:30:08,637 INFO 1w7XIK-00F95S-RT DKIM result: 'none' / '' / 'mail100.sea172.mcdlv.net' / '' / '' / ''
+2026-03-31 08:30:08,637 INFO 1w7XIK-00F95S-RT Flag file says that strict-from-count is active.
+--
+2026-03-31 08:30:16,275 INFO 1w7XIT-00F9Bp-D6 Yellow listed on se-reputation
+2026-03-31 08:30:16,278 INFO 1w7XIT-00F9Bp-D6 Found instruction at se-urlyl2 to skip URLBL check for www.instagram.com: ['127.0.0.2']
+2026-03-31 08:30:16,420 INFO 1w7XIT-00F9Bp-D6 Found instruction at se-urlyl to skip URLBL check for gmail.com: ['127.0.0.2']
+2026-03-31 08:30:16,561 INFO 1w7XIW-00F9C2-4n Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:30:16,581 INFO 1w7XIT-00F9Bn-45 Found instruction at se-urlyl2 to skip URLBL check for sendibm1.com: ['127.0.0.2']
+2026-03-31 08:30:16,748 INFO 1w7XIW-00F9C2-4n Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:30:16,754 INFO 1w7XIW-00F9C2-4n Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:30:16,754 INFO 1w7XIW-00F9C2-4n Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:30:16,756 INFO 1w7XIW-00F9C2-4n Message did not pass DKIM.
+2026-03-31 08:30:16,759 INFO 1w7XIW-00F9C2-4n Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3610262
+2026-03-31 08:30:16,776 INFO 1w7XIW-00F9C2-4n Flag file says that strict-from-count is active.
+--
+2026-03-31 08:30:17,472 INFO 1w7XIP-00F9BR-67 sa-filter-active is not set.
+2026-03-31 08:30:17,473 INFO 1w7XIP-00F9BR-67 global_tokens: 0.0253506883168
+2026-03-31 08:30:17,473 INFO 1w7XIP-00F9BR-67 crm114_substitute: 0.0253506883168
+2026-03-31 08:30:17,473 INFO 1w7XIP-00F9BR-67 Combined score: 0.0253506883168
+2026-03-31 08:30:17,473 INFO 1w7XIP-00F9BR-67 main: not-spam, sub: combined, extra: 0.0253506883168
+2026-03-31 08:30:17,561 INFO 1w7XIW-00F9C2-4n Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:30:17,573 INFO 1w7XIW-00F9C2-4n Handled message in 1.0190 seconds.
+2026-03-31 08:30:17,642 INFO 1w7XIP-00F9BR-67 Submission identity: tesoreria@kims.com.ar
+2026-03-31 08:30:17,650 INFO 1w7XIW-00F9C2-4n New garbage after cleanup: 0
+2026-03-31 08:30:17,653 INFO 1w7XIP-00F9BR-67 Handled message in 8.0892 seconds.
+2026-03-31 08:30:17,739 INFO 1w7XIP-00F9BR-67 New garbage after cleanup: 0
+--
+2026-03-31 08:44:32,748 INFO 1w7XWG-00FBAa-Aa Yellow listed on se-reputation
+2026-03-31 08:44:32,907 INFO 1w7XWK-00FBBP-Fp Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:44:32,910 INFO 1w7XWH-00FBAe-72 Submission identity: turnos-services@yuhmak.com.ar
+2026-03-31 08:44:32,928 INFO 1w7XWH-00FBAe-72 Handled message in 3.3089 seconds.
+2026-03-31 08:44:33,008 INFO 1w7XWH-00FBAe-72 New garbage after cleanup: 0
+2026-03-31 08:44:33,083 INFO 1w7XWK-00FBBP-Fp Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:44:33,091 INFO 1w7XWK-00FBBP-Fp Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:44:33,092 INFO 1w7XWK-00FBBP-Fp Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:44:33,095 INFO 1w7XWK-00FBBP-Fp Message did not pass DKIM.
+2026-03-31 08:44:33,097 INFO 1w7XWK-00FBBP-Fp Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3617911
+2026-03-31 08:44:33,115 INFO 1w7XWK-00FBBP-Fp Flag file says that strict-from-count is active.
+--
+2026-03-31 08:44:34,445 INFO 1w7XWK-00FBBP-Fp sa-filter-active is not set.
+2026-03-31 08:44:34,446 INFO 1w7XWK-00FBBP-Fp global_tokens: 0.3618577651
+2026-03-31 08:44:34,446 INFO 1w7XWK-00FBBP-Fp crm114_substitute: 0.3618577651
+2026-03-31 08:44:34,446 INFO 1w7XWK-00FBBP-Fp Combined score: 0.3618577651
+2026-03-31 08:44:34,446 INFO 1w7XWK-00FBBP-Fp main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 08:44:34,454 INFO 1w7XWK-00FBBP-Fp Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:44:34,470 INFO 1w7XWK-00FBBP-Fp Handled message in 1.5703 seconds.
+2026-03-31 08:44:34,543 INFO 1w7XWK-00FBBP-Fp New garbage after cleanup: 0
+2026-03-31 08:44:34,647 INFO 1w7XWM-00FBBk-8Z Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:44:34,822 INFO 1w7XWM-00FBBk-8Z Submission identity: repcenter@repcenter.com.ar
+2026-03-31 08:44:34,829 INFO 1w7XWM-00FBBk-8Z Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 08:45:16,267 INFO 1w7XWv-00FBM1-LP main: not-spam, sub: combined, extra: 0.162594118804
+2026-03-31 08:45:16,397 INFO 1w7XWv-00FBM1-LP Submission identity: proveedores@nikron.com.ar
+2026-03-31 08:45:16,409 INFO 1w7XWv-00FBM1-LP Handled message in 6.3341 seconds.
+2026-03-31 08:45:16,493 INFO 1w7XWv-00FBM1-LP New garbage after cleanup: 0
+2026-03-31 08:45:16,625 INFO 1w7XX2-00FBMk-7z Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:45:16,803 INFO 1w7XX2-00FBMk-7z Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:45:16,810 INFO 1w7XX2-00FBMk-7z Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:45:16,810 INFO 1w7XX2-00FBMk-7z Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:45:16,813 INFO 1w7XX2-00FBMk-7z Message did not pass DKIM.
+2026-03-31 08:45:16,815 INFO 1w7XX2-00FBMk-7z Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3618614
+2026-03-31 08:45:16,838 INFO 1w7XX2-00FBMk-7z Flag file says that strict-from-count is active.
+--
+2026-03-31 08:45:17,440 INFO 1w7XX2-00FBMk-7z sa-filter-active is not set.
+2026-03-31 08:45:17,440 INFO 1w7XX2-00FBMk-7z global_tokens: 0.3618577651
+2026-03-31 08:45:17,440 INFO 1w7XX2-00FBMk-7z crm114_substitute: 0.3618577651
+2026-03-31 08:45:17,440 INFO 1w7XX2-00FBMk-7z Combined score: 0.3618577651
+2026-03-31 08:45:17,441 INFO 1w7XX2-00FBMk-7z main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 08:45:17,448 INFO 1w7XX2-00FBMk-7z Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:45:17,463 INFO 1w7XX2-00FBMk-7z Handled message in 0.8449 seconds.
+2026-03-31 08:45:17,525 INFO 1w7XWz-00FBMJ-3m No domain provided for lookup
+2026-03-31 08:45:17,525 INFO 1w7XWz-00FBMJ-3m No domain provided for lookup
+2026-03-31 08:45:17,526 INFO 1w7XWz-00FBMJ-3m No domain provided for lookup
+2026-03-31 08:45:17,527 INFO 1w7XWz-00FBMK-3H No domain provided for lookup
+--
+2026-03-31 08:45:55,680 INFO 1w7XXe-00FBRc-85 main: phish, sub: pattern, extra: Sanesecurity.Phishing.Fake.31753
+2026-03-31 08:45:55,682 INFO 1w7XXe-00FBRc-85 Custom action matched {'main_class': 'phish', 'action': 'fake_accept', 'sub_class': '', 'extra_class': '', 'value': 'Reject phishing with no bounce'}: phish / pattern / Sanesecurity.Phishing.Fake.31753
+2026-03-31 08:45:55,724 INFO 1w7XXf-00FBRn-B1 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:45:55,841 INFO 1w7XXe-00FBRc-85 Queuing incoming spam message for fernando@sacabocados.com,sacabocados.com.
+2026-03-31 08:45:55,846 INFO 1w7XXe-00FBRc-85 Handled message in 0.6555 seconds.
+2026-03-31 08:45:55,904 INFO 1w7XXf-00FBRn-B1 Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:45:55,910 INFO 1w7XXf-00FBRn-B1 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:45:55,911 INFO 1w7XXf-00FBRn-B1 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:45:55,913 INFO 1w7XXf-00FBRn-B1 Message did not pass DKIM.
+2026-03-31 08:45:55,916 INFO 1w7XXf-00FBRn-B1 Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3618927
+2026-03-31 08:45:55,931 INFO 1w7XXf-00FBRn-B1 Flag file says that strict-from-count is active.
+--
+2026-03-31 08:45:59,696 INFO 1w7XXf-00FBRn-B1 sa-filter-active is not set.
+2026-03-31 08:45:59,696 INFO 1w7XXf-00FBRn-B1 global_tokens: 0.3618577651
+2026-03-31 08:45:59,696 INFO 1w7XXf-00FBRn-B1 crm114_substitute: 0.3618577651
+2026-03-31 08:45:59,696 INFO 1w7XXf-00FBRn-B1 Combined score: 0.3618577651
+2026-03-31 08:45:59,696 INFO 1w7XXf-00FBRn-B1 main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 08:45:59,705 INFO 1w7XXf-00FBRn-B1 Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:45:59,720 INFO 1w7XXf-00FBRn-B1 Handled message in 4.0029 seconds.
+2026-03-31 08:45:59,794 INFO 1w7XXf-00FBRn-B1 New garbage after cleanup: 0
+2026-03-31 08:45:59,917 INFO 1w7XXh-00FBS6-3L Domain antumayorista.com.ar is filtered (ip match): 45.173.0.25
+2026-03-31 08:45:59,917 INFO 1w7XXh-00FBS6-3L Ignoring sender domain antumayorista.com.ar for age checks.
+2026-03-31 08:45:59,918 INFO 1w7XXh-00FBS6-3L Domain wavenet.com is filtered (ip match): 45.173.1.25
+--
+2026-03-31 08:47:57,193 INFO 1w7XZc-00FBeE-Ir Message did not pass DKIM.
+2026-03-31 08:47:57,195 INFO 1w7XZc-00FBeE-Ir Classifying for wavenet.com.ar (45.173.1.0/24) in pid 3619698
+2026-03-31 08:47:57,200 INFO 1w7XZc-00FBeE-Ir No custom rules for this message, skipping filter.
+2026-03-31 08:47:57,200 INFO 1w7XZc-00FBeE-Ir Flag file says that strict-from-count is active.
+2026-03-31 08:47:57,200 INFO 1w7XZc-00FBeE-Ir Flag file says that strict-from-count is active.
+2026-03-31 08:47:57,234 INFO 1w7XZc-00FBeF-Kk Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:47:57,242 INFO 1w7XZc-00FBeF-Kk Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:47:57,242 INFO 1w7XZc-00FBeF-Kk Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 08:47:57,245 INFO 1w7XZc-00FBeF-Kk Message did not pass DKIM.
+2026-03-31 08:47:57,247 INFO 1w7XZc-00FBeF-Kk Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3619699
+2026-03-31 08:47:57,264 INFO 1w7XZc-00FBeF-Kk Flag file says that strict-from-count is active.
+--
+2026-03-31 08:47:58,869 INFO 1w7XZc-00FBeF-Kk sa-filter-active is not set.
+2026-03-31 08:47:58,869 INFO 1w7XZc-00FBeF-Kk global_tokens: 0.3618577651
+2026-03-31 08:47:58,869 INFO 1w7XZc-00FBeF-Kk crm114_substitute: 0.3618577651
+2026-03-31 08:47:58,869 INFO 1w7XZc-00FBeF-Kk Combined score: 0.3618577651
+2026-03-31 08:47:58,870 INFO 1w7XZc-00FBeF-Kk main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 08:47:58,878 INFO 1w7XZc-00FBeF-Kk Submission identity: autogestion@civiles.org.ar
+2026-03-31 08:47:58,895 INFO 1w7XZc-00FBeF-Kk Handled message in 1.8558 seconds.
+2026-03-31 08:47:58,968 INFO 1w7XZc-00FBeF-Kk New garbage after cleanup: 0
+2026-03-31 08:47:59,053 INFO 1w7XZZ-00FBe3-GZ public.pyzor.org:24441:6b4adf01dfa2cba99dd964868b5c55d91827b5f2 -> Hits: 0, whitelisted: 0, key pyzor
+2026-03-31 08:47:59,292 INFO 1w7XZZ-00FBe3-GZ se.pyzor.org:61391:6b4adf01dfa2cba99dd964868b5c55d91827b5f2 -> Hits: 0, whitelisted: 0, key pyzor
+2026-03-31 08:47:59,531 INFO 1w7XZZ-00FBe3-GZ global_tokens score: 0.177156506648, key global_tokens
+--
+2026-03-31 09:06:04,011 INFO 1w7Xr8-00FElN-WD Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:06:04,032 INFO 1w7Xr7-00FElD-Hs New garbage after cleanup: 0
+2026-03-31 09:06:04,102 INFO 1w7Xr9-00FEoD-NL Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:06:04,213 INFO 1w7Xr8-00FElN-WD Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:06:04,214 INFO 1w7Xr8-00FElN-WD Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:06:04,279 INFO 1w7Xr9-00FEoD-NL Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:06:04,287 INFO 1w7Xr9-00FEoD-NL Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:06:04,287 INFO 1w7Xr9-00FEoD-NL Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:06:04,289 INFO 1w7Xr9-00FEoD-NL Message did not pass DKIM.
+2026-03-31 09:06:04,292 INFO 1w7Xr9-00FEoD-NL Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3631849
+2026-03-31 09:06:04,307 INFO 1w7Xr9-00FEoD-NL Flag file says that strict-from-count is active.
+--
+2026-03-31 09:06:05,777 INFO 1w7Xr9-00FEoD-NL sa-filter-active is not set.
+2026-03-31 09:06:05,777 INFO 1w7Xr9-00FEoD-NL global_tokens: 0.3618577651
+2026-03-31 09:06:05,777 INFO 1w7Xr9-00FEoD-NL crm114_substitute: 0.3618577651
+2026-03-31 09:06:05,777 INFO 1w7Xr9-00FEoD-NL Combined score: 0.3618577651
+2026-03-31 09:06:05,778 INFO 1w7Xr9-00FEoD-NL main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 09:06:05,785 INFO 1w7Xr9-00FEoD-NL Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:06:05,800 INFO 1w7Xr9-00FEoD-NL Handled message in 1.7045 seconds.
+2026-03-31 09:06:05,823 INFO 1w7XrB-00FEoe-Ca Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:06:05,879 INFO 1w7Xr9-00FEoD-NL New garbage after cleanup: 0
+2026-03-31 09:06:06,007 INFO 1w7XrB-00FEoe-Ca Submission identity: kuruena@yuhmak.com.ar
+2026-03-31 09:06:06,013 INFO 1w7XrB-00FEoe-Ca Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 09:07:08,902 INFO 1w7XsC-00FEwt-G3 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:07:08,957 INFO 1w7Xrr-00FEth-7p Handled message in 21.0881 seconds.
+2026-03-31 09:07:08,986 INFO 1w7Xrr-00FEtf-8D New garbage after cleanup: 0
+2026-03-31 09:07:08,995 INFO 1w7Xrr-00FEtg-E2 New garbage after cleanup: 0
+2026-03-31 09:07:09,062 INFO 1w7Xrr-00FEth-7p New garbage after cleanup: 0
+2026-03-31 09:07:09,089 INFO 1w7XsC-00FEwt-G3 Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:07:09,095 INFO 1w7XsC-00FEwt-G3 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:07:09,095 INFO 1w7XsC-00FEwt-G3 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:07:09,098 INFO 1w7XsC-00FEwt-G3 Message did not pass DKIM.
+2026-03-31 09:07:09,100 INFO 1w7XsC-00FEwt-G3 Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3632387
+2026-03-31 09:07:09,117 INFO 1w7XsC-00FEwt-G3 Flag file says that strict-from-count is active.
+--
+2026-03-31 09:07:09,872 INFO 1w7XsC-00FEwt-G3 sa-filter-active is not set.
+2026-03-31 09:07:09,872 INFO 1w7XsC-00FEwt-G3 global_tokens: 0.3618577651
+2026-03-31 09:07:09,872 INFO 1w7XsC-00FEwt-G3 crm114_substitute: 0.3618577651
+2026-03-31 09:07:09,872 INFO 1w7XsC-00FEwt-G3 Combined score: 0.3618577651
+2026-03-31 09:07:09,873 INFO 1w7XsC-00FEwt-G3 main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 09:07:09,879 INFO 1w7XsC-00FEwt-G3 Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:07:09,894 INFO 1w7XsC-00FEwt-G3 Handled message in 0.9998 seconds.
+2026-03-31 09:07:09,983 INFO 1w7XsC-00FEwt-G3 New garbage after cleanup: 0
+2026-03-31 09:07:11,558 INFO 1w7XsF-00FExE-4Y Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:07:11,737 INFO 1w7XsF-00FExE-4Y Submission identity: turnos-services@yuhmak.com.ar
+2026-03-31 09:07:11,743 INFO 1w7XsF-00FExE-4Y Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 09:09:48,275 INFO 1w7Xui-00FFLm-Kw crm114_substitute: 0.296836797518
+2026-03-31 09:09:48,275 INFO 1w7Xui-00FFLm-Kw sender: 0.2
+2026-03-31 09:09:48,275 INFO 1w7Xui-00FFLm-Kw dns: 0.0
+2026-03-31 09:09:48,275 INFO 1w7Xui-00FFLm-Kw Combined score: 0.0
+2026-03-31 09:09:48,276 INFO 1w7Xui-00FFLm-Kw main: not-spam, sub: combined, extra: 0.0
+2026-03-31 09:09:48,377 INFO 1w7Xul-00FFME-PZ Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:09:48,385 INFO 1w7Xul-00FFME-PZ Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:09:48,385 INFO 1w7Xul-00FFME-PZ Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:09:48,387 INFO 1w7Xul-00FFME-PZ Message did not pass DKIM.
+2026-03-31 09:09:48,390 INFO 1w7Xul-00FFME-PZ Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3633958
+2026-03-31 09:09:48,407 INFO 1w7Xul-00FFME-PZ Flag file says that strict-from-count is active.
+--
+2026-03-31 09:09:49,154 INFO 1w7Xul-00FFME-PZ sa-filter-active is not set.
+2026-03-31 09:09:49,154 INFO 1w7Xul-00FFME-PZ global_tokens: 0.3618577651
+2026-03-31 09:09:49,154 INFO 1w7Xul-00FFME-PZ crm114_substitute: 0.3618577651
+2026-03-31 09:09:49,154 INFO 1w7Xul-00FFME-PZ Combined score: 0.3618577651
+2026-03-31 09:09:49,155 INFO 1w7Xul-00FFME-PZ main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 09:09:49,163 INFO 1w7Xul-00FFME-PZ Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:09:49,178 INFO 1w7Xul-00FFME-PZ Handled message in 0.9975 seconds.
+2026-03-31 09:09:49,248 INFO 1w7Xul-00FFME-PZ New garbage after cleanup: 0
+2026-03-31 09:09:49,349 INFO 1w7Xum-00FFMG-Om Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:09:49,361 INFO 1w7Xul-00FFM2-4V Found instruction at se-urlyl2 to skip URLBL check for drive.google.com: ['127.0.0.2']
+2026-03-31 09:09:49,541 INFO 1w7Xum-00FFMG-Om Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 09:14:32,704 INFO 1w7XzL-00FG7m-B8 Flag file says that strict-from-count is active.
+2026-03-31 09:14:32,704 INFO 1w7XzL-00FG7m-B8 Flag file says that strict-from-count is active.
+2026-03-31 09:14:32,707 INFO 1w7XzL-00FG7m-B8 This message has gone through us 0 times.
+2026-03-31 09:14:33,281 INFO 1w7XzM-00FG8I-Sn Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:14:33,402 INFO 1w7XzM-00FG8F-Ms Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:14:33,459 INFO 1w7XzM-00FG8I-Sn Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:14:33,466 INFO 1w7XzM-00FG8I-Sn Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:14:33,466 INFO 1w7XzM-00FG8I-Sn Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:14:33,469 INFO 1w7XzM-00FG8I-Sn Message did not pass DKIM.
+2026-03-31 09:14:33,471 INFO 1w7XzM-00FG8I-Sn Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3636938
+2026-03-31 09:14:33,487 INFO 1w7XzM-00FG8I-Sn Flag file says that strict-from-count is active.
+--
+2026-03-31 09:14:34,825 INFO 1w7XzM-00FG8I-Sn sa-filter-active is not set.
+2026-03-31 09:14:34,825 INFO 1w7XzM-00FG8I-Sn global_tokens: 0.3618577651
+2026-03-31 09:14:34,825 INFO 1w7XzM-00FG8I-Sn crm114_substitute: 0.3618577651
+2026-03-31 09:14:34,825 INFO 1w7XzM-00FG8I-Sn Combined score: 0.3618577651
+2026-03-31 09:14:34,826 INFO 1w7XzM-00FG8I-Sn main: unsure, sub: combined, extra: 0.3618577651
+2026-03-31 09:14:34,833 INFO 1w7XzM-00FG8I-Sn Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:14:34,835 INFO 1w7XzO-00FG8a-EN Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:14:34,849 INFO 1w7XzM-00FG8I-Sn Handled message in 1.5750 seconds.
+2026-03-31 09:14:34,929 INFO 1w7XzM-00FG8I-Sn New garbage after cleanup: 0
+2026-03-31 09:14:35,016 INFO 1w7XzO-00FG8a-EN Submission identity: repcenter@repcenter.com.ar
+2026-03-31 09:14:35,023 INFO 1w7XzO-00FG8a-EN Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 09:15:14,367 INFO 1w7Xzy-00FGJ9-HG Found instruction at se-urlyl2 to skip URLBL check for fonts.googleapis.com: ['127.0.0.2']
+2026-03-31 09:15:14,392 INFO 1w7Xzy-00FGJ9-HG Found instruction at se-urlyl2 to skip URLBL check for fonts.gstatic.com: ['127.0.0.2']
+2026-03-31 09:15:16,156 INFO 1w7Xzy-00FGJ9-HG Found instruction at se-urlyl2 to skip URLBL check for shi.com: ['127.0.0.2']
+2026-03-31 09:15:16,181 INFO 1w7Xzy-00FGJ9-HG Found instruction at se-urlyl2 to skip URLBL check for gstatic.com: ['127.0.0.2']
+2026-03-31 09:15:16,208 INFO 1w7Y03-00FGJf-Q7 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:15:16,393 INFO 1w7Y03-00FGJf-Q7 Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:15:16,400 INFO 1w7Y03-00FGJf-Q7 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:15:16,400 INFO 1w7Y03-00FGJf-Q7 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:15:16,402 INFO 1w7Y03-00FGJf-Q7 Message did not pass DKIM.
+2026-03-31 09:15:16,404 INFO 1w7Y03-00FGJf-Q7 Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3637643
+2026-03-31 09:15:16,420 INFO 1w7Y03-00FGJf-Q7 Flag file says that strict-from-count is active.
+--
+2026-03-31 09:15:18,174 INFO 1w7Y03-00FGJf-Q7 sa-filter-active is not set.
+2026-03-31 09:15:18,174 INFO 1w7Y03-00FGJf-Q7 global_tokens: 0.318797559194
+2026-03-31 09:15:18,174 INFO 1w7Y03-00FGJf-Q7 crm114_substitute: 0.318797559194
+2026-03-31 09:15:18,175 INFO 1w7Y03-00FGJf-Q7 Combined score: 0.318797559194
+2026-03-31 09:15:18,175 INFO 1w7Y03-00FGJf-Q7 main: unsure, sub: combined, extra: 0.318797559194
+2026-03-31 09:15:18,183 INFO 1w7Y03-00FGJf-Q7 Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:15:18,199 INFO 1w7Y03-00FGJf-Q7 Handled message in 1.9983 seconds.
+2026-03-31 09:15:18,285 INFO 1w7Y03-00FGJf-Q7 New garbage after cleanup: 0
+2026-03-31 09:15:18,312 INFO 1w7Y03-00FGJc-NW Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:15:18,513 INFO 1w7Y03-00FGJc-NW Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:15:18,514 INFO 1w7Y03-00FGJc-NW Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 09:30:06,766 INFO 1w7YEQ-00FIkH-Am Handled message in 0.0157 seconds.
+2026-03-31 09:30:06,808 INFO 1w7YEQ-00FIkH-Am New garbage after cleanup: 0
+2026-03-31 09:30:07,432 INFO 1w7YEN-00FIh4-Pj Domain wavenet.com is filtered (ip match): 45.173.1.25
+2026-03-31 09:30:07,433 INFO 1w7YEN-00FIh4-Pj Ignoring sender domain wavenet.com for age checks.
+2026-03-31 09:30:07,513 INFO 1w7YER-00FIkb-3p Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:07,692 INFO 1w7YER-00FIkb-3p Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:30:07,699 INFO 1w7YER-00FIkb-3p Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:07,700 INFO 1w7YER-00FIkb-3p Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:07,703 INFO 1w7YER-00FIkb-3p Message did not pass DKIM.
+2026-03-31 09:30:07,705 INFO 1w7YER-00FIkb-3p Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3647001
+2026-03-31 09:30:07,722 INFO 1w7YER-00FIkb-3p Flag file says that strict-from-count is active.
+--
+2026-03-31 09:30:08,908 INFO 1w7YER-00FIkb-3p sa-filter-active is not set.
+2026-03-31 09:30:08,908 INFO 1w7YER-00FIkb-3p global_tokens: 0.445370617377
+2026-03-31 09:30:08,908 INFO 1w7YER-00FIkb-3p crm114_substitute: 0.445370617377
+2026-03-31 09:30:08,908 INFO 1w7YER-00FIkb-3p Combined score: 0.445370617377
+2026-03-31 09:30:08,909 INFO 1w7YER-00FIkb-3p main: unsure, sub: combined, extra: 0.445370617377
+2026-03-31 09:30:08,916 INFO 1w7YER-00FIkb-3p Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:30:08,919 INFO 1w7YEN-00FIh4-Pj Handled message in 4.7234 seconds.
+2026-03-31 09:30:08,927 INFO 1w7YER-00FIkb-3p Handled message in 1.4206 seconds.
+2026-03-31 09:30:08,998 INFO 1w7YER-00FIkb-3p New garbage after cleanup: 0
+2026-03-31 09:30:09,000 INFO 1w7YEN-00FIh4-Pj New garbage after cleanup: 0
+2026-03-31 09:30:14,705 INFO 1w7YEM-00FIcN-SB Found instruction at se-urlyl to skip URLBL check for yahoo.com: ['127.0.0.2']
+--
+2026-03-31 09:30:16,033 INFO 1w7YEX-00FIld-Ks Message is whitelisted for ALL recipients (via sender or recipient whitelist)
+2026-03-31 09:30:16,033 INFO 1w7YEX-00FIld-Ks main: whitelisted, sub: sender, extra: envelope
+2026-03-31 09:30:16,185 INFO 1w7YEX-00FIld-Ks Handled message in 0.4835 seconds.
+2026-03-31 09:30:16,272 INFO 1w7YEX-00FIld-Ks New garbage after cleanup: 0
+2026-03-31 09:30:20,424 INFO 1w7YEd-00FIlv-VG Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:20,651 INFO 1w7YEd-00FIlv-VG Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:30:20,658 INFO 1w7YEd-00FIlv-VG Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:20,658 INFO 1w7YEd-00FIlv-VG Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:20,660 INFO 1w7YEd-00FIlv-VG Message did not pass DKIM.
+2026-03-31 09:30:20,661 INFO 1w7YEe-00FIlu-4X Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:20,662 INFO 1w7YEd-00FIlv-VG Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3647083
+--
+2026-03-31 09:30:21,303 INFO 1w7YEd-00FIlv-VG sa-filter-active is not set.
+2026-03-31 09:30:21,303 INFO 1w7YEd-00FIlv-VG global_tokens: 0.0774506873127
+2026-03-31 09:30:21,303 INFO 1w7YEd-00FIlv-VG crm114_substitute: 0.0774506873127
+2026-03-31 09:30:21,303 INFO 1w7YEd-00FIlv-VG Combined score: 0.0774506873127
+2026-03-31 09:30:21,304 INFO 1w7YEd-00FIlv-VG main: not-spam, sub: combined, extra: 0.0774506873127
+2026-03-31 09:30:21,489 INFO 1w7YEd-00FIlv-VG Submission identity: autogestion@civiles.org.ar
+2026-03-31 09:30:21,502 INFO 1w7YEd-00FIlv-VG Handled message in 1.0884 seconds.
+2026-03-31 09:30:21,592 INFO 1w7YEd-00FIlv-VG New garbage after cleanup: 0
+2026-03-31 09:30:22,547 INFO 1w7YEf-00FIlt-6X Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:22,752 INFO 1w7YEf-00FIlt-6X Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 09:30:22,753 INFO 1w7YEf-00FIlt-6X Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 10:30:09,776 INFO 1w7ZAX-00FSjP-B0 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:09,902 INFO 1w7ZAC-00FSXj-I8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:09,902 INFO 1w7ZAC-00FSXj-I8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:09,913 INFO 1w7ZAC-00FSXj-I8 Message did not pass DKIM.
+2026-03-31 10:30:09,914 INFO 1w7ZAC-00FSXj-I8 Classifying for kims.com.ar in pid 3684643
+2026-03-31 10:30:09,962 INFO 1w7ZAX-00FSjP-B0 Submission identity: autogestion@civiles.org.ar
+2026-03-31 10:30:09,968 INFO 1w7ZAX-00FSjP-B0 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:09,968 INFO 1w7ZAX-00FSjP-B0 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:09,971 INFO 1w7ZAX-00FSjP-B0 Message did not pass DKIM.
+2026-03-31 10:30:09,973 INFO 1w7ZAX-00FSjP-B0 Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3685367
+2026-03-31 10:30:09,989 INFO 1w7ZAX-00FSjP-B0 Flag file says that strict-from-count is active.
+--
+2026-03-31 10:30:11,766 INFO 1w7ZAX-00FSjP-B0 sa-filter-active is not set.
+2026-03-31 10:30:11,767 INFO 1w7ZAX-00FSjP-B0 global_tokens: 0.445337611462
+2026-03-31 10:30:11,767 INFO 1w7ZAX-00FSjP-B0 crm114_substitute: 0.445337611462
+2026-03-31 10:30:11,767 INFO 1w7ZAX-00FSjP-B0 Combined score: 0.445337611462
+2026-03-31 10:30:11,767 INFO 1w7ZAX-00FSjP-B0 main: unsure, sub: combined, extra: 0.445337611462
+2026-03-31 10:30:11,775 INFO 1w7ZAX-00FSjP-B0 Submission identity: autogestion@civiles.org.ar
+2026-03-31 10:30:11,785 INFO 1w7ZAX-00FSjP-B0 Handled message in 2.0172 seconds.
+2026-03-31 10:30:11,809 INFO 1w7ZAZ-00FSjT-4S Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:11,810 INFO 1w7ZAZ-00FSjT-4S Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:11,819 INFO 1w7ZAZ-00FSjS-4L Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:11,820 INFO 1w7ZAZ-00FSjS-4L Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 10:30:15,605 INFO 1w7ZAb-00FSk6-8i Handled message in 1.6907 seconds.
+2026-03-31 10:30:15,695 INFO 1w7ZAb-00FSk6-8i New garbage after cleanup: 0
+2026-03-31 10:30:18,215 INFO 1w7ZAZ-00FSjN-Kl Found instruction at se-urlyl2 to skip URLBL check for outlook.com: ['127.0.0.2']
+2026-03-31 10:30:18,216 INFO 1w7ZAZ-00FSjN-Kl Ignoring sender domain outlook.com for age checks.
+2026-03-31 10:30:18,549 INFO 1w7ZAg-00FSkf-4s Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:18,737 INFO 1w7ZAg-00FSkf-4s Submission identity: autogestion@civiles.org.ar
+2026-03-31 10:30:18,744 INFO 1w7ZAg-00FSkf-4s Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:18,744 INFO 1w7ZAg-00FSkf-4s Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 10:30:18,747 INFO 1w7ZAg-00FSkf-4s Message did not pass DKIM.
+2026-03-31 10:30:18,749 INFO 1w7ZAg-00FSkf-4s Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3685445
+2026-03-31 10:30:18,769 INFO 1w7ZAg-00FSkf-4s Flag file says that strict-from-count is active.
+--
+2026-03-31 10:30:19,486 INFO 1w7ZAZ-00FSjN-Kl global_tokens: 0.251133278682
+2026-03-31 10:30:19,486 INFO 1w7ZAZ-00FSjN-Kl crm114_substitute: 0.251133278682
+2026-03-31 10:30:19,486 INFO 1w7ZAZ-00FSjN-Kl sender: 0.5
+2026-03-31 10:30:19,486 INFO 1w7ZAZ-00FSjN-Kl Combined score: 0.251133278682
+2026-03-31 10:30:19,487 INFO 1w7ZAZ-00FSjN-Kl main: not-spam, sub: combined, extra: 0.251133278682
+2026-03-31 10:30:19,574 INFO 1w7ZAg-00FSkf-4s Submission identity: autogestion@civiles.org.ar
+2026-03-31 10:30:19,585 INFO 1w7ZAg-00FSkf-4s Handled message in 1.0435 seconds.
+2026-03-31 10:30:19,677 INFO 1w7ZAg-00FSkf-4s New garbage after cleanup: 0
+2026-03-31 10:30:19,680 INFO 1w7ZAZ-00FSjN-Kl Handled message in 6.8676 seconds.
+2026-03-31 10:30:19,774 INFO 1w7ZAZ-00FSjN-Kl New garbage after cleanup: 0
+2026-03-31 10:30:22,411 INFO 1w7ZAj-00FSkl-6w Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 11:30:08,565 INFO 1w7a6Q-00FdcQ-Gi Domain epre.gov.ar is filtered (ip match): 45.173.1.25
+2026-03-31 11:30:08,583 INFO 1w7a6X-00Fdgv-5I Permanent skip-DNSBL instruction
+2026-03-31 11:30:08,627 INFO 1w7a6a-00FdmG-6G Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:30:08,730 INFO 1w7a6X-00Fdgv-5I Yellow listed on Hostkarma
+2026-03-31 11:30:08,732 INFO 1w7a6X-00Fdgv-5I Yellow listed on se-reputation
+2026-03-31 11:30:08,824 INFO 1w7a6a-00FdmG-6G Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:30:08,831 INFO 1w7a6a-00FdmG-6G Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:30:08,832 INFO 1w7a6a-00FdmG-6G Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:30:08,834 INFO 1w7a6a-00FdmG-6G Message did not pass DKIM.
+2026-03-31 11:30:08,836 INFO 1w7a6a-00FdmG-6G Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3727828
+2026-03-31 11:30:08,854 INFO 1w7a6a-00FdmG-6G Flag file says that strict-from-count is active.
+--
+2026-03-31 11:30:10,232 INFO 1w7a6a-00FdmG-6G sa-filter-active is not set.
+2026-03-31 11:30:10,232 INFO 1w7a6a-00FdmG-6G global_tokens: 0.445337469958
+2026-03-31 11:30:10,232 INFO 1w7a6a-00FdmG-6G crm114_substitute: 0.445337469958
+2026-03-31 11:30:10,232 INFO 1w7a6a-00FdmG-6G Combined score: 0.445337469958
+2026-03-31 11:30:10,233 INFO 1w7a6a-00FdmG-6G main: unsure, sub: combined, extra: 0.445337469958
+2026-03-31 11:30:10,241 INFO 1w7a6a-00FdmG-6G Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:30:10,252 INFO 1w7a6a-00FdmG-6G Handled message in 1.6320 seconds.
+2026-03-31 11:30:10,341 INFO 1w7a6a-00FdmG-6G New garbage after cleanup: 0
+2026-03-31 11:30:10,419 INFO 1w7a6Y-00Fdhg-80 Permanent skip-DNSBL instruction
+2026-03-31 11:30:12,160 INFO 1w7a6Y-00Fdhg-80 Yellow listed on Hostkarma
+2026-03-31 11:30:12,601 INFO 1w7a6Y-00Fdhg-80 Found instruction at se-urlyl2 to skip URLBL check for ad.doubleclick.net: ['127.0.0.2']
+--
+2026-03-31 11:30:19,931 INFO 1w7a6i-00FdnK-Lv sa-filter-active is not set.
+2026-03-31 11:30:19,931 INFO 1w7a6i-00FdnK-Lv global_tokens: 0.116494093718
+2026-03-31 11:30:19,931 INFO 1w7a6i-00FdnK-Lv crm114_substitute: 0.116494093718
+2026-03-31 11:30:19,931 INFO 1w7a6i-00FdnK-Lv Combined score: 0.116494093718
+2026-03-31 11:30:19,932 INFO 1w7a6i-00FdnK-Lv main: not-spam, sub: combined, extra: 0.116494093718
+2026-03-31 11:30:19,952 INFO 1w7a6l-00Fdnb-Al Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:30:19,959 INFO 1w7a6l-00Fdnb-Al Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:30:19,959 INFO 1w7a6l-00Fdnb-Al Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:30:19,961 INFO 1w7a6l-00Fdnb-Al Message did not pass DKIM.
+2026-03-31 11:30:19,964 INFO 1w7a6l-00Fdnb-Al Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3727911
+2026-03-31 11:30:19,980 INFO 1w7a6l-00Fdnb-Al Flag file says that strict-from-count is active.
+--
+2026-03-31 11:30:20,627 INFO 1w7a6l-00Fdnb-Al sa-filter-active is not set.
+2026-03-31 11:30:20,627 INFO 1w7a6l-00Fdnb-Al global_tokens: 0.072911594191
+2026-03-31 11:30:20,627 INFO 1w7a6l-00Fdnb-Al crm114_substitute: 0.072911594191
+2026-03-31 11:30:20,627 INFO 1w7a6l-00Fdnb-Al Combined score: 0.072911594191
+2026-03-31 11:30:20,628 INFO 1w7a6l-00Fdnb-Al main: not-spam, sub: combined, extra: 0.072911594191
+2026-03-31 11:30:20,814 INFO 1w7a6l-00Fdnb-Al Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:30:20,827 INFO 1w7a6l-00Fdnb-Al Handled message in 1.0698 seconds.
+2026-03-31 11:30:20,837 INFO 1w7a6l-00FdnQ-6p Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:30:20,913 INFO 1w7a6l-00Fdnb-Al New garbage after cleanup: 0
+2026-03-31 11:30:21,053 INFO 1w7a6l-00FdnQ-6p Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:30:21,054 INFO 1w7a6l-00FdnQ-6p Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 11:33:17,369 INFO 1w7a9Q-00FeGe-Tn Hostkarma new sender domain: plumari.com.ar
+2026-03-31 11:33:17,440 INFO 1w7a9b-00FeL3-T0 New garbage after cleanup: 0
+2026-03-31 11:33:17,450 INFO 1w7a9d-00FeLB-1I Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:33:17,507 INFO 1w7a9X-00FeKJ-Ut 0.002% (2/1000) Direct matches.
+2026-03-31 11:33:17,508 INFO 1w7a9X-00FeKJ-Ut Flag file says that pyzor_no_null is active.
+2026-03-31 11:33:17,659 INFO 1w7a9d-00FeLB-1I Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:33:17,666 INFO 1w7a9d-00FeLB-1I Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:33:17,667 INFO 1w7a9d-00FeLB-1I Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:33:17,669 INFO 1w7a9d-00FeLB-1I Message did not pass DKIM.
+2026-03-31 11:33:17,672 INFO 1w7a9d-00FeLB-1I Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3729993
+2026-03-31 11:33:17,687 INFO 1w7a9d-00FeLB-1I Flag file says that strict-from-count is active.
+--
+2026-03-31 11:33:19,191 INFO 1w7a9d-00FeLB-1I sa-filter-active is not set.
+2026-03-31 11:33:19,191 INFO 1w7a9d-00FeLB-1I global_tokens: 0.324448624659
+2026-03-31 11:33:19,191 INFO 1w7a9d-00FeLB-1I crm114_substitute: 0.324448624659
+2026-03-31 11:33:19,191 INFO 1w7a9d-00FeLB-1I Combined score: 0.324448624659
+2026-03-31 11:33:19,191 INFO 1w7a9d-00FeLB-1I main: unsure, sub: combined, extra: 0.324448624659
+2026-03-31 11:33:19,199 INFO 1w7a9d-00FeLB-1I Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:33:19,211 INFO 1w7a9d-00FeLB-1I Handled message in 1.7688 seconds.
+2026-03-31 11:33:19,302 INFO 1w7a9d-00FeLB-1I New garbage after cleanup: 0
+2026-03-31 11:33:19,311 INFO 1w7a9e-00FeLa-T8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:33:19,327 INFO 1w7a9e-00FeLb-TB Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:33:19,501 INFO 1w7a9e-00FeLa-T8 Submission identity: __capataz__@ulasoft.com.ar
+--
+2026-03-31 11:53:11,011 INFO 1w7aSs-00Fhb2-1l From and Reply-To are not both free providers (Areabis <info.areabis@gmail.com> / )
+2026-03-31 11:53:11,014 INFO 1w7aSs-00Fhb2-1l Flag file says that strict-from-count is active.
+2026-03-31 11:53:11,014 INFO 1w7aSs-00Fhb2-1l Flag file says that strict-from-count is active.
+2026-03-31 11:53:11,016 INFO 1w7aSs-00Fhb2-1l This message has gone through us 0 times.
+2026-03-31 11:53:11,062 INFO 1w7aSs-00FhbE-LO Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:53:11,242 INFO 1w7aSs-00FhbE-LO Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:53:11,248 INFO 1w7aSs-00FhbE-LO Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:53:11,249 INFO 1w7aSs-00FhbE-LO Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 11:53:11,254 INFO 1w7aSs-00FhbE-LO Message did not pass DKIM.
+2026-03-31 11:53:11,256 INFO 1w7aSs-00FhbE-LO Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3742520
+2026-03-31 11:53:11,295 INFO 1w7aSs-00FhbE-LO Flag file says that strict-from-count is active.
+--
+2026-03-31 11:53:17,840 INFO 1w7aSs-00FhbE-LO Combined score: 0.133865821585
+2026-03-31 11:53:17,840 INFO 1w7aSs-00FhbE-LO main: not-spam, sub: combined, extra: 0.133865821585
+2026-03-31 11:53:17,932 INFO 1w7aSy-00Fhc2-Vz Classifying for cpcelapampa.org.ar in pid 3742570
+2026-03-31 11:53:18,013 INFO 1w7aSb-00FhXg-2g 0.00956937799043% (4/418) Direct matches.
+2026-03-31 11:53:18,014 INFO 1w7aSb-00FhXg-2g Flag file says that pyzor_no_null is active.
+2026-03-31 11:53:18,017 INFO 1w7aSs-00FhbE-LO Submission identity: autogestion@civiles.org.ar
+2026-03-31 11:53:18,028 INFO 1w7aSs-00FhbE-LO Handled message in 6.9730 seconds.
+2026-03-31 11:53:18,096 INFO 1w7aSy-00Fhc2-Vz DMARC recommendation: accept
+2026-03-31 11:53:18,117 INFO 1w7aSs-00FhbE-LO New garbage after cleanup: 0
+2026-03-31 11:53:18,268 INFO 1w7aSb-00FhXg-2g public.pyzor.org:24441:546a5d8ae3c4428e6bdbcbc504eb9b601c9283fa -> Hits: 0, whitelisted: 0, key pyzor
+2026-03-31 11:53:18,306 INFO 1w7aSy-00Fhc2-Vz Found HELO/EHLO difference at 2
+--
+2026-03-31 12:30:06,580 INFO 1w7b2X-00FniQ-E5 Combined score: 0.103858559853
+2026-03-31 12:30:06,580 INFO 1w7b2X-00FniQ-E5 main: not-spam, sub: combined, extra: 0.103858559853
+2026-03-31 12:30:06,784 INFO 1w7b2X-00FniQ-E5 Handled message in 4.4521 seconds.
+2026-03-31 12:30:06,874 INFO 1w7b2X-00FniQ-E5 New garbage after cleanup: 0
+2026-03-31 12:30:06,922 INFO 1w7b2c-00Fnqp-Gj Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 12:30:07,113 INFO 1w7b2c-00Fnqp-Gj Submission identity: autogestion@civiles.org.ar
+2026-03-31 12:30:07,120 INFO 1w7b2c-00Fnqp-Gj Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 12:30:07,121 INFO 1w7b2c-00Fnqp-Gj Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 12:30:07,123 INFO 1w7b2c-00Fnqp-Gj Message did not pass DKIM.
+2026-03-31 12:30:07,125 INFO 1w7b2c-00Fnqp-Gj Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3766551
+2026-03-31 12:30:07,143 INFO 1w7b2c-00Fnqp-Gj Flag file says that strict-from-count is active.
+--
+2026-03-31 12:30:08,507 INFO 1w7b2c-00Fnqp-Gj sa-filter-active is not set.
+2026-03-31 12:30:08,507 INFO 1w7b2c-00Fnqp-Gj global_tokens: 0.445337469958
+2026-03-31 12:30:08,508 INFO 1w7b2c-00Fnqp-Gj crm114_substitute: 0.445337469958
+2026-03-31 12:30:08,508 INFO 1w7b2c-00Fnqp-Gj Combined score: 0.445337469958
+2026-03-31 12:30:08,508 INFO 1w7b2c-00Fnqp-Gj main: unsure, sub: combined, extra: 0.445337469958
+2026-03-31 12:30:08,515 INFO 1w7b2c-00Fnqp-Gj Submission identity: autogestion@civiles.org.ar
+2026-03-31 12:30:08,527 INFO 1w7b2c-00Fnqp-Gj Handled message in 1.6116 seconds.
+2026-03-31 12:30:08,608 INFO 1w7b2c-00Fnqp-Gj New garbage after cleanup: 0
+2026-03-31 12:30:09,161 INFO 1w7b2d-00FnrK-7y Skipping DNSBL for auth-by-IP
+2026-03-31 12:30:09,855 INFO 1w7b2d-00FnrK-7y Domain kims.com.ar is filtered (ip match): 45.173.0.25
+2026-03-31 12:30:10,312 INFO 1w7b2d-00FnrK-7y Skipping URL that has non-ASCII characters: u'www.google.com/maps/search/Marcos+Sastre+549+\xe2\x80\x93+EL+TALAR'
+--
+2026-03-31 12:30:14,122 INFO 1w7b2h-00Fnrz-Tm Found instruction at se-urlyl2 to skip URLBL check for linkedin.com: ['127.0.0.2']
+2026-03-31 12:30:14,174 INFO 1w7b2i-00Fns0-1l Submission identity: turnos-services@yuhmak.com.ar
+2026-03-31 12:30:14,190 INFO 1w7b2i-00Fns0-1l Handled message in 1.6597 seconds.
+2026-03-31 12:30:14,294 INFO 1w7b2i-00Fns0-1l New garbage after cleanup: 0
+2026-03-31 12:30:16,125 INFO 1w7b2l-00FnsH-MS Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 12:30:16,334 INFO 1w7b2l-00FnsH-MS Submission identity: autogestion@civiles.org.ar
+2026-03-31 12:30:16,342 INFO 1w7b2l-00FnsH-MS Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 12:30:16,342 INFO 1w7b2l-00FnsH-MS Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 12:30:16,346 INFO 1w7b2l-00FnsH-MS Message did not pass DKIM.
+2026-03-31 12:30:16,349 INFO 1w7b2l-00FnsH-MS Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3766641
+2026-03-31 12:30:16,367 INFO 1w7b2l-00FnsH-MS Flag file says that strict-from-count is active.
+--
+2026-03-31 12:30:17,020 INFO 1w7b2l-00FnsH-MS crm114_substitute: 0.0748630375026
+2026-03-31 12:30:17,020 INFO 1w7b2l-00FnsH-MS Combined score: 0.0748630375026
+2026-03-31 12:30:17,020 INFO 1w7b2l-00FnsH-MS main: not-spam, sub: combined, extra: 0.0748630375026
+2026-03-31 12:30:17,196 INFO 1w7b2h-00Fnrz-Tm 0.0% (0/1000) Direct matches.
+2026-03-31 12:30:17,196 INFO 1w7b2h-00Fnrz-Tm Flag file says that pyzor_no_null is active.
+2026-03-31 12:30:17,215 INFO 1w7b2l-00FnsH-MS Submission identity: autogestion@civiles.org.ar
+2026-03-31 12:30:17,231 INFO 1w7b2l-00FnsH-MS Handled message in 1.1132 seconds.
+2026-03-31 12:30:17,333 INFO 1w7b2l-00FnsH-MS New garbage after cleanup: 0
+2026-03-31 12:30:17,456 INFO 1w7b2h-00Fnrz-Tm public.pyzor.org:24441:5f8d69bcb1833d16862d06bdc4079bc7795b56c3 -> Hits: 0, whitelisted: 0, key pyzor
+2026-03-31 12:30:17,700 INFO 1w7b2h-00Fnrz-Tm se.pyzor.org:61391:5f8d69bcb1833d16862d06bdc4079bc7795b56c3 -> Hits: 0, whitelisted: 0, key pyzor
+2026-03-31 12:30:17,771 INFO 1w7b2h-00Fnrz-Tm global_tokens score: 0.0406176893985, key global_tokens
+--
+2026-03-31 13:21:25,598 INFO 1w7bqD-00FvwO-H1 Found instruction at se-urlyl2 to skip URLBL check for app.customerthermometer.com: ['127.0.0.2']
+2026-03-31 13:21:25,600 INFO 1w7bqD-00FvwO-H1 Found instruction at se-urlyl2 to skip URLBL check for ns.adobe.com: ['127.0.0.2']
+2026-03-31 13:21:25,903 INFO 1w7bqD-00FvwO-H1 Found instruction at se-urlyl2 to skip URLBL check for linkedin.com: ['127.0.0.2']
+2026-03-31 13:21:26,223 INFO 1w7bqD-00FvwO-H1 Found instruction at se-urlyl2 to skip URLBL check for customerthermometer.com: ['127.0.0.2']
+2026-03-31 13:21:26,361 INFO 1w7bqH-00Fvwf-UX Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:21:26,561 INFO 1w7bqH-00Fvwf-UX Submission identity: autogestion@civiles.org.ar
+2026-03-31 13:21:26,570 INFO 1w7bqH-00Fvwf-UX Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:21:26,571 INFO 1w7bqH-00Fvwf-UX Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:21:26,573 INFO 1w7bqH-00Fvwf-UX Message did not pass DKIM.
+2026-03-31 13:21:26,575 INFO 1w7bqH-00Fvwf-UX Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3797665
+2026-03-31 13:21:26,592 INFO 1w7bqH-00Fvwf-UX Flag file says that strict-from-count is active.
+--
+2026-03-31 13:21:29,382 INFO 1w7bqH-00Fvwf-UX sa-filter-active is not set.
+2026-03-31 13:21:29,382 INFO 1w7bqH-00Fvwf-UX global_tokens: 0.226333104581
+2026-03-31 13:21:29,382 INFO 1w7bqH-00Fvwf-UX crm114_substitute: 0.226333104581
+2026-03-31 13:21:29,382 INFO 1w7bqH-00Fvwf-UX Combined score: 0.226333104581
+2026-03-31 13:21:29,383 INFO 1w7bqH-00Fvwf-UX main: not-spam, sub: combined, extra: 0.226333104581
+2026-03-31 13:21:29,592 INFO 1w7bqH-00Fvwf-UX Submission identity: autogestion@civiles.org.ar
+2026-03-31 13:21:29,607 INFO 1w7bqH-00Fvwf-UX Handled message in 3.2529 seconds.
+2026-03-31 13:21:29,711 INFO 1w7bqH-00Fvwf-UX New garbage after cleanup: 0
+2026-03-31 13:21:30,173 INFO 1w7bq6-00Fvw6-Ak Domain hotelmanantialdelsilencio.com is filtered (ip match): 45.173.1.25
+2026-03-31 13:21:30,174 INFO 1w7bq6-00Fvw6-Ak Ignoring sender domain hotelmanantialdelsilencio.com for age checks.
+2026-03-31 13:21:30,175 INFO 1w7bq6-00Fvw6-Ak Domain wavenet.com is filtered (ip match): 45.173.0.25
+--
+2026-03-31 13:30:05,311 INFO 1w7bye-00FxEK-SH Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:05,314 INFO 1w7bye-00FxEK-SH Locally generated message
+2026-03-31 13:30:05,314 INFO 1w7bye-00FxEK-SH Handled message in 0.0196 seconds.
+2026-03-31 13:30:05,365 INFO 1w7bye-00FxEK-SH New garbage after cleanup: 0
+2026-03-31 13:30:06,926 INFO 1w7byg-00FxEt-Gy Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:07,114 INFO 1w7byg-00FxEt-Gy Submission identity: autogestion@civiles.org.ar
+2026-03-31 13:30:07,120 INFO 1w7byg-00FxEt-Gy Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:07,121 INFO 1w7byg-00FxEt-Gy Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:07,123 INFO 1w7byg-00FxEt-Gy Message did not pass DKIM.
+2026-03-31 13:30:07,126 INFO 1w7byg-00FxEt-Gy Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3802639
+2026-03-31 13:30:07,143 INFO 1w7byg-00FxEt-Gy Flag file says that strict-from-count is active.
+--
+2026-03-31 13:30:08,489 INFO 1w7byg-00FxEt-Gy sa-filter-active is not set.
+2026-03-31 13:30:08,489 INFO 1w7byg-00FxEt-Gy global_tokens: 0.445337469958
+2026-03-31 13:30:08,489 INFO 1w7byg-00FxEt-Gy crm114_substitute: 0.445337469958
+2026-03-31 13:30:08,489 INFO 1w7byg-00FxEt-Gy Combined score: 0.445337469958
+2026-03-31 13:30:08,490 INFO 1w7byg-00FxEt-Gy main: unsure, sub: combined, extra: 0.445337469958
+2026-03-31 13:30:08,497 INFO 1w7byg-00FxEt-Gy Submission identity: autogestion@civiles.org.ar
+2026-03-31 13:30:08,507 INFO 1w7byg-00FxEt-Gy Handled message in 1.5885 seconds.
+2026-03-31 13:30:08,582 INFO 1w7byg-00FxEt-Gy New garbage after cleanup: 0
+2026-03-31 13:30:08,802 INFO 1w7byi-00FxFQ-C1 No sender address. Message may be a bounce
+2026-03-31 13:30:08,804 INFO 1w7byi-00FxFQ-C1 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:09,007 INFO 1w7byi-00FxFQ-C1 Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 13:30:12,252 INFO 1w7byI-00Fx6O-7L Combined score: 0.263863404179
+2026-03-31 13:30:12,252 INFO 1w7byI-00Fx6O-7L main: not-spam, sub: combined, extra: 0.263863404179
+2026-03-31 13:30:12,440 INFO 1w7byI-00Fx6O-7L Handled message in 28.9348 seconds.
+2026-03-31 13:30:12,530 INFO 1w7byI-00Fx6O-7L New garbage after cleanup: 0
+2026-03-31 13:30:19,172 INFO 1w7bys-00FxG8-PA Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:19,359 INFO 1w7bys-00FxG8-PA Submission identity: autogestion@civiles.org.ar
+2026-03-31 13:30:19,365 INFO 1w7bys-00FxG8-PA Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:19,365 INFO 1w7bys-00FxG8-PA Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:19,367 INFO 1w7bys-00FxG8-PA Message did not pass DKIM.
+2026-03-31 13:30:19,369 INFO 1w7bys-00FxG8-PA Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3802716
+2026-03-31 13:30:19,385 INFO 1w7bys-00FxG8-PA Flag file says that strict-from-count is active.
+--
+2026-03-31 13:30:20,176 INFO 1w7bys-00FxG8-PA sa-filter-active is not set.
+2026-03-31 13:30:20,176 INFO 1w7bys-00FxG8-PA global_tokens: 0.0849487904929
+2026-03-31 13:30:20,176 INFO 1w7bys-00FxG8-PA crm114_substitute: 0.0849487904929
+2026-03-31 13:30:20,176 INFO 1w7bys-00FxG8-PA Combined score: 0.0849487904929
+2026-03-31 13:30:20,177 INFO 1w7bys-00FxG8-PA main: not-spam, sub: combined, extra: 0.0849487904929
+2026-03-31 13:30:20,361 INFO 1w7bys-00FxG8-PA Submission identity: autogestion@civiles.org.ar
+2026-03-31 13:30:20,372 INFO 1w7bys-00FxG8-PA Handled message in 1.2103 seconds.
+2026-03-31 13:30:20,461 INFO 1w7bys-00FxG8-PA New garbage after cleanup: 0
+2026-03-31 13:30:34,760 INFO 1w7bz8-00FxGl-AK Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 13:30:34,946 INFO 1w7bz8-00FxGl-AK Submission identity: notificacion@yuhmak.com.ar
+2026-03-31 13:30:34,954 INFO 1w7bz8-00FxGl-AK Flag file says that msg-data-loading-cleanup is active.
+--
+2026-03-31 14:30:02,254 INFO 1w7cuf-00G6eg-Pl Handled message in 0.0199 seconds.
+2026-03-31 14:30:02,307 INFO 1w7cuf-00G6eg-Pl New garbage after cleanup: 0
+2026-03-31 14:30:03,088 INFO 1w7cuQ-00G6cZ-3j Hostkarma old sender domain: nm-01.com.ar
+2026-03-31 14:30:03,675 INFO 1w7cuQ-00G6cZ-3j Hostkarma old sender domain: servidoraweb.net
+2026-03-31 14:30:05,029 INFO 1w7cui-00G6i6-K8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 14:30:05,215 INFO 1w7cui-00G6i6-K8 Submission identity: autogestion@civiles.org.ar
+2026-03-31 14:30:05,223 INFO 1w7cui-00G6i6-K8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 14:30:05,223 INFO 1w7cui-00G6i6-K8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 14:30:05,226 INFO 1w7cui-00G6i6-K8 Message did not pass DKIM.
+2026-03-31 14:30:05,228 INFO 1w7cui-00G6i6-K8 Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3839046
+2026-03-31 14:30:05,247 INFO 1w7cui-00G6i6-K8 Flag file says that strict-from-count is active.
+--
+2026-03-31 14:30:09,531 INFO 1w7cui-00G6i6-K8 sa-filter-active is not set.
+2026-03-31 14:30:09,532 INFO 1w7cui-00G6i6-K8 global_tokens: 0.445337469958
+2026-03-31 14:30:09,532 INFO 1w7cui-00G6i6-K8 crm114_substitute: 0.445337469958
+2026-03-31 14:30:09,532 INFO 1w7cui-00G6i6-K8 Combined score: 0.445337469958
+2026-03-31 14:30:09,533 INFO 1w7cui-00G6i6-K8 main: unsure, sub: combined, extra: 0.445337469958
+2026-03-31 14:30:09,549 INFO 1w7cui-00G6i6-K8 Submission identity: autogestion@civiles.org.ar
+2026-03-31 14:30:09,566 INFO 1w7cui-00G6i6-K8 Handled message in 4.5434 seconds.
+2026-03-31 14:30:09,654 INFO 1w7cui-00G6i6-K8 New garbage after cleanup: 0
+2026-03-31 14:30:09,839 INFO 1w7cuj-00G6id-Ck Yellow listed on se-reputation
+2026-03-31 14:30:10,057 INFO 1w7cuk-00G6ib-Cn No BL listed on HostKarma
+2026-03-31 14:30:10,057 INFO 1w7cuk-00G6ib-Cn Yellow listed on se-reputation
+--
+ 558018 meana damian jorge.pdf is application/octet-stream
+2026-03-31 14:30:15,233 INFO 1w7cur-00G6nV-Vq Skipping DNSBL for auth-by-IP
+2026-03-31 14:30:15,337 INFO 1w7cus-00G6nf-U8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 14:30:15,390 INFO 1w7cur-00G6nS-63 0.00499168053245% (3/601) Direct matches.
+2026-03-31 14:30:15,391 INFO 1w7cur-00G6nS-63 Flag file says that pyzor_no_null is active.
+2026-03-31 14:30:15,523 INFO 1w7cus-00G6nf-U8 Submission identity: autogestion@civiles.org.ar
+2026-03-31 14:30:15,528 INFO 1w7cus-00G6nf-U8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 14:30:15,529 INFO 1w7cus-00G6nf-U8 Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 14:30:15,531 INFO 1w7cus-00G6nf-U8 Message did not pass DKIM.
+2026-03-31 14:30:15,533 INFO 1w7cus-00G6nf-U8 Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3839391
+2026-03-31 14:30:15,533 INFO 1w7cur-00G6nV-Vq Domain repcenter.com.ar is filtered (ip match): 45.173.0.25
+--
+2026-03-31 14:30:16,343 INFO 1w7cus-00G6nf-U8 sa-filter-active is not set.
+2026-03-31 14:30:16,344 INFO 1w7cus-00G6nf-U8 global_tokens: 0.0774298819066
+2026-03-31 14:30:16,344 INFO 1w7cus-00G6nf-U8 crm114_substitute: 0.0774298819066
+2026-03-31 14:30:16,344 INFO 1w7cus-00G6nf-U8 Combined score: 0.0774298819066
+2026-03-31 14:30:16,345 INFO 1w7cus-00G6nf-U8 main: not-spam, sub: combined, extra: 0.0774298819066
+2026-03-31 14:30:16,529 INFO 1w7cus-00G6nf-U8 Submission identity: autogestion@civiles.org.ar
+2026-03-31 14:30:16,542 INFO 1w7cus-00G6nf-U8 Handled message in 1.2123 seconds.
+2026-03-31 14:30:16,649 INFO 1w7cus-00G6nf-U8 New garbage after cleanup: 0
+2026-03-31 14:30:17,266 INFO 1w7cuU-00G6cl-IX 0.00657894736842% (4/608) Direct matches.
+2026-03-31 14:30:17,267 INFO 1w7cuU-00G6cl-IX Flag file says that pyzor_no_null is active.
+2026-03-31 14:30:17,528 INFO 1w7cuU-00G6cl-IX public.pyzor.org:24441:ffc8b1c1bb1b490e381263d3def4af0edf5abf78 -> Hits: 0, whitelisted: 0, key pyzor

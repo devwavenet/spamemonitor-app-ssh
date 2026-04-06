@@ -1,0 +1,1404 @@
+================================================================================
+              DESGLOSE COMPLETO DE LOGS - SISTEMA ANTISPAM
+              Exim4 + SpamExperts + Servidor antispam-01.wavenet.com
+================================================================================
+
+Este documento detalla cada tipo de entrada de log encontrado en los archivos
+de la carpeta Ejemplo-de-logs, explicando qué representa cada campo y cada
+patrón de log.
+
+================================================================================
+ARCHIVO 1: logs-ip-server.txt
+================================================================================
+Origen: grep "45.173.0.25" /var/log/exim4/mainlog
+Descripción: Filtra todas las líneas del mainlog de Exim4 que contienen la IP
+             del servidor antispam (45.173.0.25). Muestra tráfico entrante y
+             saliente que pasa por ese servidor.
+
+--- TIPO DE ENTRADA: Autenticación fallida (brute-force) ---
+
+Ejemplo:
+2026-04-06 00:00:45 [2810242] login authenticator failed for 157.101.169.56.static.zoot.jp ([36.154.20.34]) [157.101.169.56] I=[45.173.0.25]:465: 535 Incorrect authentication data (set_id=castro2374@deboligrafos.com)
+
+Desglose:
+2026-04-06 00:00:45     → fecha/hora del evento
+[2810242]               → PID del proceso Exim que manejó la conexión
+login authenticator failed for → tipo de evento: fallo de autenticación SMTP
+157.101.169.56.static.zoot.jp  → hostname reverso (PTR) del cliente
+([36.154.20.34])        → hostname declarado en HELO/EHLO entre paréntesis
+[157.101.169.56]        → IP real del cliente que intenta autenticarse 🔥
+I=[45.173.0.25]:465     → interfaz del servidor que recibió la conexión
+                          (IP + puerto, 465 = SMTPS)
+535 Incorrect authentication data → código de error SMTP + descripción
+(set_id=castro2374@deboligrafos.com) → cuenta de usuario que intentó usar
+
+🔍 Indicador de ataque: brute-force de credenciales SMTP
+
+
+--- TIPO DE ENTRADA: Rechazo por brute-force (denegado) ---
+
+Ejemplo:
+2026-04-06 00:02:23 [2811390] H=ec2-35-175-250-99.compute-1.amazonaws.com (EC2AMAZ-TJDL490.ec2.internal) [35.175.250.99] I=[45.173.0.25]:587 X=TLS1.3:TLS_AES_256_GCM_SHA384:256 CV=no SNI=mx01.emba.com.ar rejected AUTH MTI4MTRAZW1iYS5jb20uYXI=: You have been denied authentication due to possible brute-force attempts; please try again later.
+
+Desglose:
+2026-04-06 00:02:23     → fecha/hora
+[2811390]               → PID del proceso
+H=ec2-35-175-250-99...  → hostname del cliente (H=host)
+(EC2AMAZ-TJDL490...)    → nombre HELO/EHLO declarado
+[35.175.250.99]         → IP real del cliente 🔥
+I=[45.173.0.25]:587     → interfaz del servidor (puerto 587 = Submission)
+X=TLS1.3:...            → cifrado TLS negociado
+CV=no                   → certificado TLS no verificado
+SNI=mx01.emba.com.ar    → Server Name Indication (dominio solicitado)
+rejected AUTH           → acción: autenticación rechazada
+MTI4MTRAZW1iYS5jb20uYXI= → credencial en base64 (usuario codificado)
+You have been denied... → motivo: bloqueo por posibles intentos de fuerza bruta
+
+🔍 Indicador de ataque: IP bloqueada temporalmente tras múltiples intentos fallidos
+
+
+--- TIPO DE ENTRADA: Mensaje aceptado (entrada/entrante) ---
+
+Ejemplo:
+2026-04-06 00:00:53 [2810409] 1w9aCn-00Bn7B-NI <= root@ttsviajes.wavenet.com H=ttsviajes.wavenet.com [45.173.1.114] I=[45.173.0.25]:25 P=esmtps CV=no SNI=mx01.emba.com.ar K S=14902 DKIM=env.etransmail.com id=28461065.196070.1775444431508@smtpbp.falconide.com
+
+Desglose:
+2026-04-06 00:00:53     → fecha/hora
+[2810409]               → PID del proceso
+1w9aCn-00Bn7B-NI        → ID del mensaje en Exim 🔑
+<=                      → símbolo de entrada de correo (llegada)
+root@ttsviajes.wavenet.com → remitente (FROM)
+H=ttsviajes.wavenet.com → hostname del servidor origen
+[45.173.1.114]          → IP del servidor origen 🔥
+I=[45.173.0.25]:25      → interfaz del servidor receptor (puerto 25 = SMTP)
+P=esmtps                → protocolo (esmtps = ESMTP sobre TLS)
+CV=no                   → certificado no verificado
+SNI=mx01.emba.com.ar    → Server Name Indication
+K                       → marca interna de Exim
+S=14902                 → tamaño del mensaje en bytes
+DKIM=env.etransmail.com → firma DKIM verificada con este dominio
+id=...                  → Message-ID del encabezado del correo
+
+
+--- TIPO DE ENTRADA: Mensaje entregado (salida/relay) ---
+
+Ejemplo:
+2026-04-06 00:00:54 [2810418] 1w9aCn-00Bn7B-NI => rbaez@wavenet.com.ar R=spamexperts T=remote_smtp_batv H=mail.wavenet.com.ar [45.173.0.100] I=[45.173.0.25] CV=yes C="250 2.6.0 3240 bytes received in 00:00:00; Message id 202604060000559928 accepted for delivery"
+
+Desglose:
+2026-04-06 00:00:54     → fecha/hora
+[2810418]               → PID del proceso
+1w9aCn-00Bn7B-NI        → ID del mensaje (mismo que la entrada anterior = mismo correo)
+=>                      → símbolo de entrega exitosa (relay/entrega)
+rbaez@wavenet.com.ar    → destinatario final
+R=spamexperts           → router usado (spamexperts = pasa por filtro antispam)
+T=remote_smtp_batv      → transporte usado
+H=mail.wavenet.com.ar   → hostname del servidor destino
+[45.173.0.100]          → IP del servidor destino 🔥
+I=[45.173.0.25]         → interfaz de salida del servidor
+CV=yes                  → certificado TLS verificado correctamente
+C="250 2.6.0 ..."       → respuesta SMTP del servidor destino (éxito)
+
+
+--- TIPO DE ENTRADA: Mensaje completado ---
+
+Ejemplo:
+2026-04-06 00:02:14 [2811375] 1w9aE8-00BnMi-1H Completed
+
+Desglose:
+2026-04-06 00:02:14     → fecha/hora
+[2811375]               → PID del proceso
+1w9aE8-00BnMi-1H        → ID del mensaje
+Completed               → el mensaje fue procesado completamente por Exim
+
+
+--- TIPO DE ENTRADA: RCPT rechazado (usuario desconocido) ---
+
+Ejemplo:
+2026-04-06 00:01:06 [2810662] H=(gmx.com) [190.247.241.87] I=[45.173.0.25]:25 F=<fevinservidormail9773@gmx.com> rejected RCPT <cmartos@wavenet.com>: 5.1.1 <cmartos@wavenet.com.ar> User unknown; rejecting
+
+Desglose:
+2026-04-06 00:01:06     → fecha/hora
+[2810662]               → PID del proceso
+H=(gmx.com)             → hostname declarado en HELO (entre paréntesis = posiblemente falso)
+[190.247.241.87]        → IP real del remitente 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+F=<fevinservidormail9773@gmx.com> → FROM (remitente)
+rejected RCPT           → acción: destinatario rechazado
+<cmartos@wavenet.com>   → destinatario intentado
+5.1.1 ... User unknown  → código SMTP: el buzón no existe
+rejecting               → acción final: se rechaza
+
+🔍 Indicador de spam/scanning: atacante probando buzones inexistentes
+
+
+--- TIPO DE ENTRADA: Error TLS en conexión ---
+
+Ejemplo:
+2026-04-06 00:01:03 [2810660] TLS error on connection from v515.v5d1da871.use4.send.mailgun.net [143.55.230.15] I=[45.173.0.25]:25 (SSL_accept): error:0A000412:SSL routines::sslv3 alert bad certificate
+
+Desglose:
+2026-04-06 00:01:03     → fecha/hora
+[2810660]               → PID del proceso
+TLS error on connection from → tipo de evento: error TLS
+v515.v5d1da871...       → hostname del cliente
+[143.55.230.15]         → IP del cliente 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+(SSL_accept)            → fase del handshake TLS donde falló
+error:0A000412:...      → código de error OpenSSL
+sslv3 alert bad certificate → motivo: certificado inválido o no confiable
+
+
+--- TIPO DE ENTRADA: Advertencia DMARC ---
+
+Ejemplo:
+2026-04-06 00:00:49 [2810409] 1w9aCn-00Bn7B-NI H=ttsviajes.wavenet.com [45.173.1.114] I=[45.173.0.25]:25 Warning: DMARC DEBUG: 'accept' for wavenet.com - Accept
+
+Desglose:
+2026-04-06 00:00:49     → fecha/hora
+[2810409]               → PID del proceso
+1w9aCn-00Bn7B-NI        → ID del mensaje
+H=ttsviajes.wavenet.com → hostname del remitente
+[45.173.1.114]          → IP del remitente 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+Warning: DMARC DEBUG    → tipo de evento: diagnóstico DMARC
+'accept'                → resultado de la política DMARC
+for wavenet.com         → dominio evaluado
+- Accept                → acción tomada: aceptar el mensaje
+
+Valores posibles de DMARC DEBUG:
+  'accept'    → DMARC pasa, se acepta
+  'quarantine' → DMARC falla parcialmente, se pone en cuarentena
+  'norecord'  → No hay registro DMARC para el dominio
+  'reject'    → DMARC falla, se rechaza
+
+
+--- TIPO DE ENTRADA: Rechazo por Spamhaus ZEN ---
+
+Ejemplo:
+2026-04-06 00:01:21 [2810854] 1w9aDI-00BnEM-2p F=root@vps18.falesiaho.com H=vps18.falesiaho.com [194.38.20.143] I=[45.173.0.25]:25 P=esmtp rejected by local_scan(): The sending IP ( 194.38.20.143 ) is listed on Spamhaus ZEN. See https://check.spamhaus.org/
+
+Desglose:
+2026-04-06 00:01:21     → fecha/hora
+[2810854]               → PID del proceso
+1w9aDI-00BnEM-2p        → ID del mensaje
+F=root@vps18.falesiaho.com → FROM (remitente)
+H=vps18.falesiaho.com   → hostname del remitente
+[194.38.20.143]         → IP del remitente (listada en Spamhaus) 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+P=esmtp                 → protocolo
+rejected by local_scan() → rechazado por el filtro local (SpamExperts)
+The sending IP (...) is listed on Spamhaus ZEN → motivo del rechazo
+
+🔍 Indicador de spam: IP del remitente está en blacklist Spamhaus ZEN
+
+
+--- TIPO DE ENTRADA: Rechazo por remitente inválido ---
+
+Ejemplo:
+2026-04-06 00:01:10 [2810797] H=server.oroverdedigital.com.ar [45.173.1.108] I=[45.173.0.25]:587 X=TLS1.3:TLS_AES_256_GCM_SHA384:256 CV=no rejected MAIL <wordpress@lrbalpargatas.com.ar>: Invalid sender <wordpress@lrbalpargatas.com.ar>
+
+Desglose:
+2026-04-06 00:01:10     → fecha/hora
+[2810797]               → PID del proceso
+H=server.oroverdedigital.com.ar → hostname del cliente
+[45.173.1.108]          → IP del cliente 🔥
+I=[45.173.0.25]:587     → interfaz (puerto 587 = Submission)
+X=TLS1.3:...            → cifrado TLS
+CV=no                   → certificado no verificado
+rejected MAIL           → acción: comando MAIL rechazado
+<wordpress@...>         → dirección de remitente rechazada
+Invalid sender          → motivo: el remitente no es válido/no está autorizado
+
+
+--- TIPO DE ENTRADA: Rechazo por HELO inválido ---
+
+Ejemplo:
+2026-04-06 00:01:10 [2810789] H=([77.83.39.44]) [77.83.39.44] I=[45.173.0.25]:25 F=<ucwl.investors@jkmail.com> rejected RCPT <wolfe@wavenet.com>: Access denied - Invalid HELO name (See RFC5321 4.1.1.1)
+
+Desglose:
+2026-04-06 00:01:10     → fecha/hora
+[2810789]               → PID del proceso
+H=([77.83.39.44])       → HELO declarado (entre paréntesis = IP sin hostname válido)
+[77.83.39.44]           → IP real del cliente 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+F=<ucwl.investors@jkmail.com> → FROM (remitente)
+rejected RCPT           → acción: destinatario rechazado
+<wolfe@wavenet.com>     → destinatario intentado
+Access denied - Invalid HELO name → motivo: el nombre HELO no es válido
+(See RFC5321 4.1.1.1)   → referencia al estándar RFC
+
+🔍 Indicador de spam: spammers suelen usar HELOs inválidos
+
+
+--- TIPO DE ENTRADA: Rate limiting (demasiado rápido) ---
+
+Ejemplo:
+2026-03-30 10:40:18 [3005443] 185.169.4.178 is sending too fast: 28.5 (limit 1.01, period 1m, rep 127.0.0.1)
+
+Desglose:
+2026-03-30 10:40:18     → fecha/hora
+[3005443]               → PID del proceso
+185.169.4.178           → IP del remitente 🔥
+is sending too fast     → tipo de evento: rate limit excedido
+28.5                    → tasa actual (mensajes por período)
+limit 1.01              → límite permitido
+period 1m               → período de medición (1 minuto)
+rep 127.0.0.1           → reputación interna del servidor
+
+🔍 Indicador de ataque/spam: IP enviando a alta velocidad
+
+
+--- TIPO DE ENTRADA: Rate OK (dentro del límite) ---
+
+Ejemplo:
+2026-03-30 10:40:21 [3005480] 216.221.175.194 is sending ok: 1.0 (limit 50, period 1m, rep 127.1.0.17)
+
+Desglose:
+2026-03-30 10:40:21     → fecha/hora
+[3005480]               → PID del proceso
+216.221.175.194         → IP del remitente 🔥
+is sending ok           → tipo de evento: dentro del límite
+1.0                     → tasa actual
+limit 50                → límite permitido (50 mensajes/minuto)
+period 1m               → período de medición
+rep 127.1.0.17          → reputación interna
+
+
+--- TIPO DE ENTRADA: Resultados DMARC completos ---
+
+Ejemplo:
+2026-03-30 10:40:20 [3005430] 1w7Cqq-00Cbqg-B9 DMARC results: spf_domain=atlassian-bounces.atlassian.net dmarc_domain=atlassian.net spf_align=yes dkim_align=yes enforcement='Accept'
+
+Desglose:
+2026-03-30 10:40:20     → fecha/hora
+[3005430]               → PID del proceso
+1w7Cqq-00Cbqg-B9        → ID del mensaje
+DMARC results           → tipo de evento: resultado de verificación DMARC
+spf_domain=...          → dominio verificado por SPF
+dmarc_domain=...        → dominio de la política DMARC
+spf_align=yes           → alineación SPF (el dominio FROM coincide con SPF)
+dkim_align=yes          → alineación DKIM (el dominio FROM coincide con DKIM)
+enforcement='Accept'    → política DMARC aplicada: aceptar
+
+Valores posibles de enforcement:
+  'Accept'     → mensaje aceptado
+  'Quarantine' → mensaje puesto en cuarentena
+  'Reject'     → mensaje rechazado
+
+
+--- TIPO DE ENTRADA: Nueva conexión SpamExperts (outgoing) ---
+
+Ejemplo:
+2026-03-30 10:40:20 [3005451] New SpamExperts (outgoing) connection from 45.173.1.59 (load: 1060, pid: 3005451)
+
+Desglose:
+2026-03-30 10:40:20     → fecha/hora
+[3005451]               → PID del proceso
+New SpamExperts (outgoing) connection from → tipo de evento
+45.173.1.59             → IP del servidor interno que envía correo 🔥
+load: 1060              → carga actual del servidor
+pid: 3005451            → PID del proceso SpamExperts
+
+
+--- TIPO DE ENTRADA: SSL certificate name mismatch ---
+
+Ejemplo:
+2026-03-30 10:40:24 [3005508] 1w7Cqj-00Cbp9-Ff [45.173.0.72] SSL verify error: certificate name mismatch: DN="/CN=webmax-cp-02.wavenet.com" H="mail.dicofar.com"
+
+Desglose:
+2026-03-30 10:40:24     → fecha/hora
+[3005508]               → PID del proceso
+1w7Cqj-00Cbp9-Ff        → ID del mensaje
+[45.173.0.72]           → IP del servidor destino 🔥
+SSL verify error        → tipo de evento: error de verificación SSL
+certificate name mismatch → motivo: el nombre del certificado no coincide
+DN="/CN=webmax-cp-02..." → Distinguished Name del certificado (nombre real)
+H="mail.dicofar.com"    → hostname esperado (el que se intentó conectar)
+
+
+--- TIPO DE ENTRADA: Network unreachable (IPv6) ---
+
+Ejemplo:
+2026-03-30 10:40:57 [3005744] 1w7CrD-00Cbu3-TR H=payway-com-ar.mail.protection.outlook.com [2a01:111:f403:f910::] Network is unreachable
+
+Desglose:
+2026-03-30 10:40:57     → fecha/hora
+[3005744]               → PID del proceso
+1w7CrD-00Cbu3-TR        → ID del mensaje
+H=payway-com-ar.mail... → hostname del servidor destino
+[2a01:111:f403:f910::]  → dirección IPv6 del destino
+Network is unreachable  → error: la red IPv6 no es alcanzable
+
+
+--- TIPO DE ENTRADA: Bounce (null-sender) ---
+
+Ejemplo:
+2026-03-30 10:40:22 [3005483] 1w7Cqr-00CbrX-Kr <= <> R=1w7Cqp-00CZja-5c U=Debian-exim P=local S=4366 Q=null-sender
+
+Desglose:
+2026-03-30 10:40:22     → fecha/hora
+[3005483]               → PID del proceso
+1w7Cqr-00CbrX-Kr        → ID del mensaje (bounce)
+<= <>                   → remitente vacío (bounce/notify de no entrega)
+R=1w7Cqp-00CZja-5c      → referencia al mensaje original que generó el bounce
+U=Debian-exim           → usuario del sistema que generó el mensaje
+P=local                 → protocolo local
+S=4366                  → tamaño del bounce en bytes
+Q=null-sender           → indicador de que es un mensaje sin remitente real
+
+
+--- TIPO DE ENTRADA: Blackhole (descartar mensaje) ---
+
+Ejemplo:
+2026-03-30 10:40:22 [3005490] 1w7Cqr-00CbrX-Kr => :blackhole: <no-reply@antispam-01.wavenet.com> R=system_aliases
+
+Desglose:
+2026-03-30 10:40:22     → fecha/hora
+[3005490]               → PID del proceso
+1w7Cqr-00CbrX-Kr        → ID del mensaje
+=> :blackhole:          → el mensaje se descarta silenciosamente
+<no-reply@antispam-01...> → dirección destino (blackhole)
+R=system_aliases        → router usado (alias del sistema)
+
+
+--- TIPO DE ENTRADA: SPF blackhole ---
+
+Ejemplo:
+2026-03-30 10:40:26 [3005494] 1w7Cqu-00Cbri-6Z => blackhole 178.16.52.41 is not allowed to send mail from aguilarseguros.com.ar. Please see the SPF record, with scope mfrom, identity andrea@aguilarseguros.com.ar, and ip 178.16.52.41
+
+Desglose:
+2026-03-30 10:40:26     → fecha/hora
+[3005494]               → PID del proceso
+1w7Cqu-00Cbri-6Z        → ID del mensaje
+=> blackhole            → mensaje descartado
+178.16.52.41            → IP del remitente no autorizada 🔥
+is not allowed to send mail from → motivo: no autorizado por SPF
+aguilarseguros.com.ar   → dominio que se intenta suplantar
+scope mfrom             → alcance de la verificación SPF
+identity andrea@...     → identidad del remitente verificada
+ip 178.16.52.41         → IP que falló la verificación SPF
+
+🔍 Indicador de spoofing: alguien envía desde IP no autorizada por SPF
+
+
+--- TIPO DE ENTRADA: Rechazo por contenido spam (Sanesecurity) ---
+
+Ejemplo:
+2026-03-30 10:40:33 [2997302] 1w7Cr2-00CZja-K6 F=no-reply@antispam-01.wavenet.com H=localhost (antispam-01.wavenet.com) [127.0.0.1] I=[127.0.0.1]:587 P=esmtp rejected by local_scan(): Message contained spam content (Sanesecurity.Jurlbl.0fd81a)
+
+Desglose:
+2026-03-30 10:40:33     → fecha/hora
+[2997302]               → PID del proceso
+1w7Cr2-00CZja-K6        → ID del mensaje
+F=no-reply@antispam...  → FROM (remitente)
+H=localhost             → hostname (localhost = generado internamente)
+[127.0.0.1]             → IP localhost
+I=[127.0.0.1]:587       → interfaz local
+P=esmtp                 → protocolo
+rejected by local_scan() → rechazado por filtro SpamExperts
+Message contained spam content → motivo: contenido spam detectado
+(Sanesecurity.Jurlbl.0fd81a) → firma de spam detectada (regla Sanesecurity)
+
+
+--- TIPO DE ENTRADA: Subject con caracteres inválidos ---
+
+Ejemplo:
+2026-03-30 10:40:36 [3005574] 1w7Cr4-00Cbt0-Ig F=envios@elenviador.com H=news.elenviador.com [209.59.151.196] I=[45.173.0.25]:25 P=esmtp rejected by local_scan(): Subject contains invalid characters.
+
+Desglose:
+2026-03-30 10:40:36     → fecha/hora
+[3005574]               → PID del proceso
+1w7Cr4-00Cbt0-Ig        → ID del mensaje
+F=envios@elenviador.com → FROM (remitente)
+H=news.elenviador.com   → hostname del remitente
+[209.59.151.196]        → IP del remitente 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+P=esmtp                 → protocolo
+rejected by local_scan() → rechazado por filtro SpamExperts
+Subject contains invalid characters → motivo: caracteres no válidos en el asunto
+
+🔍 Indicador de spam: subjects con caracteres extraños suelen ser spam
+
+
+--- TIPO DE ENTRADA: DMARC Quarantine ---
+
+Ejemplo:
+2026-03-30 10:40:37 [3005609] 1w7Cr7-00CbtZ-Id DMARC results: spf_domain=a14-98.smtp-out.amazonses.com dmarc_domain=icommarketing.com spf_align=no dkim_align=no enforcement='Quarantine'
+
+Desglose:
+2026-03-30 10:40:37     → fecha/hora
+[3005609]               → PID del proceso
+1w7Cr7-00CbtZ-Id        → ID del mensaje
+DMARC results           → resultado de verificación DMARC
+spf_domain=...          → dominio verificado por SPF
+dmarc_domain=icommarketing.com → dominio de la política DMARC
+spf_align=no            → SPF NO está alineado (fallo)
+dkim_align=no           → DKIM NO está alineado (fallo)
+enforcement='Quarantine' → política: poner en cuarentena
+
+🔍 Indicador de posible spoofing: ambos alineamientos fallan
+
+
+--- TIPO DE ENTRADA: Entrega con error SMTP remoto ---
+
+Ejemplo:
+2026-03-30 10:40:21 [3005461] 1w7Cqp-00CZja-5c ** dmarc@mailinblue.com R=spamexperts_managed_dnslookup T=spamexperts_managed_smtp H=aspmx.l.google.com [108.177.123.26] I=[45.173.0.25] X=TLS1.3:TLS_AES_256_GCM_SHA384:256 CV=yes: SMTP error from remote mail server after RCPT TO:<dmarc@mailinblue.com>: 550-5.7.1 The user or domain that you are sending to (or from) has a policy that prohibited the mail...
+
+Desglose:
+2026-03-30 10:40:21     → fecha/hora
+[3005461]               → PID del proceso
+1w7Cqp-00CZja-5c        → ID del mensaje
+**                      → símbolo de error FATAL en la entrega
+dmarc@mailinblue.com    → destinatario que falló
+R=spamexperts_managed_dnslookup → router usado
+T=spamexperts_managed_smtp → transporte usado
+H=aspmx.l.google.com    → hostname del servidor destino
+[108.177.123.26]        → IP del servidor destino 🔥
+I=[45.173.0.25]         → interfaz de salida
+X=TLS1.3:...            → cifrado TLS
+CV=yes                  → certificado verificado
+SMTP error from remote mail server → error del servidor remoto
+after RCPT TO:<...>     → fase SMTP donde falló
+550-5.7.1 ...           → código y mensaje de error del servidor remoto
+
+
+--- TIPO DE ENTRADA: Conexión timeout ---
+
+Ejemplo:
+2026-03-30 10:40:57 [3004023] 1w6CzX-0065N9-Nn H=hotamil.com [20.112.250.133] Connection timed out
+
+Desglose:
+2026-03-30 10:40:57     → fecha/hora
+[3004023]               → PID del proceso
+1w6CzX-0065N9-Nn        → ID del mensaje
+H=hotamil.com           → hostname del servidor destino
+[20.112.250.133]        → IP del servidor destino 🔥
+Connection timed out    → error: la conexión agotó el tiempo de espera
+
+
+--- TIPO DE ENTRADA: Sender verify defer ---
+
+Ejemplo:
+2026-04-06 00:03:58 [2811716] ... sender verify defer for <root@vps15.falesiaho.com>
+
+Desglose:
+sender verify defer     → tipo de evento: verificación de remitente diferida
+<root@vps15.falesiaho.com> → dirección que no pudo ser verificada
+
+🔍 Indicador de posible spam: remitente no verificable
+
+
+================================================================================
+ARCHIVO 2: reporte-directo-unsure.txt
+================================================================================
+Origen: grep -C 5 "autogestion@civiles.org.ar" /var/log/spamexperts/local_scan.log
+Descripción: Muestra entradas del log de SpamExperts clasificadas como "unsure"
+             para la identidad autogestion@civiles.org.ar. El -C 5 incluye 5
+             líneas de contexto antes y después de cada coincidencia.
+
+--- TIPO DE ENTRADA: Identidad de envío (Submission identity) ---
+
+Ejemplo:
+2026-03-31 00:44:13,197 INFO 1w7Q1U-00EOEF-KZ Submission identity: autogestion@civiles.org.ar
+
+Desglose:
+2026-03-31 00:44:13,197 → fecha/hora con milisegundos
+INFO                    → nivel de log (informativo)
+1w7Q1U-00EOEF-KZ        → ID del mensaje en Exim 🔑
+Submission identity     → tipo de dato: identidad del remitente autenticado
+autogestion@civiles.org.ar → correo electrónico del remitente 🔥
+
+
+--- TIPO DE ENTRADA: Fallo DKIM ---
+
+Ejemplo:
+2026-03-31 00:44:13,206 INFO 1w7Q1U-00EOEF-KZ Message did not pass DKIM.
+
+Desglose:
+2026-03-31 00:44:13,206 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7Q1U-00EOEF-KZ        → ID del mensaje
+Message did not pass DKIM → la firma DKIM no fue válida o no existe
+
+🔍 Indicador de posible spoofing: email sin DKIM válido
+
+
+--- TIPO DE ENTRADA: Clasificación del mensaje ---
+
+Ejemplo:
+2026-03-31 00:44:13,208 INFO 1w7Q1U-00EOEF-KZ Classifying for wavenet.com.ar (45.173.0.0/24) in pid 3429731
+
+Desglose:
+2026-03-31 00:44:13,208 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7Q1U-00EOEF-KZ        → ID del mensaje
+Classifying for         → tipo de evento: clasificación en proceso
+wavenet.com.ar          → dominio gestionado
+(45.173.0.0/24)         → rango IP del servidor de envío
+in pid 3429731          → PID del proceso de clasificación
+
+
+--- TIPO DE ENTRADA: Puntuación CRM114 (análisis estadístico) ---
+
+Ejemplo:
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ global_tokens: 0.0531715750641
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ crm114_substitute: 0.0531715750641
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ Combined score: 0.0531715750641
+
+Desglose:
+global_tokens           → puntuación de tokens globales del mensaje
+crm114_substitute       → puntuación del filtro CRM114 (clasificador bayesiano)
+Combined score          → puntuación combinada final
+
+Escala de puntuación CRM114:
+  0.0 - 0.2   → muy probable que sea legítimo
+  0.2 - 0.5   → unsure (incierto)
+  0.5 - 0.8   → probable spam
+  0.8 - 1.0   → muy probable spam
+
+
+--- TIPO DE ENTRADA: Resultado de clasificación principal ---
+
+Ejemplo:
+2026-03-31 00:44:18,033 INFO 1w7Q1U-00EOEF-KZ main: not-spam, sub: combined, extra: 0.0531715750641
+2026-03-31 08:26:16,284 INFO 1w7XEc-00F8hZ-6Z main: unsure, sub: combined, extra: 0.318797559194
+
+Desglose:
+main: not-spam          → clasificación principal (no spam)
+main: unsure            → clasificación principal (incierto/pendiente)
+main: spam              → clasificación principal (spam confirmado)
+main: phish             → clasificación principal (phishing)
+main: whitelisted       → clasificación principal (en lista blanca)
+sub: combined           → subclasificación: método combinado
+sub: dnsbl              → subclasificación: DNS blacklist
+sub: heuristic          → subclasificación: análisis heurístico
+sub: pattern            → subclasificación: patrón conocido
+sub: sender             → subclasificación: reputación del remitente
+extra: 0.XXX            → puntuación adicional o identificador
+
+
+--- TIPO DE ENTRADA: Cola de mensaje spam entrante ---
+
+Ejemplo:
+2026-03-31 00:44:03,313 INFO 1w7Q1I-00EOC0-3J Queuing incoming spam message for administracion@culturallibrera.com.ar,culturallibrera.com.ar.
+
+Desglose:
+2026-03-31 00:44:03,313 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7Q1I-00EOC0-3J        → ID del mensaje
+Queuing incoming spam message for → tipo de evento: mensaje encolado como spam
+administracion@culturallibrera.com.ar → destinatario del mensaje spam
+culturallibrera.com.ar  → dominio destinatario
+
+
+--- TIPO DE ENTRADA: Tiempo de procesamiento ---
+
+Ejemplo:
+2026-03-31 00:44:18,211 INFO 1w7Q1U-00EOEF-KZ Handled message in 5.1985 seconds.
+
+Desglose:
+2026-03-31 00:44:18,211 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7Q1U-00EOEF-KZ        → ID del mensaje
+Handled message in X seconds → tiempo total de procesamiento del mensaje
+
+
+--- TIPO DE ENTRADA: Limpieza post-procesamiento ---
+
+Ejemplo:
+2026-03-31 00:44:18,290 INFO 1w7Q1U-00EOEF-KZ New garbage after cleanup: 0
+
+Desglose:
+2026-03-31 00:44:18,290 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7Q1U-00EOEF-KZ        → ID del mensaje
+New garbage after cleanup: 0 → archivos temporales residuales tras limpieza
+                              (0 = limpieza exitosa sin residuos)
+
+
+--- TIPO DE ENTRADA: Flag file activo ---
+
+Ejemplo:
+2026-03-31 00:44:13,204 INFO 1w7Q1U-00EOEF-KZ Flag file says that msg-data-loading-cleanup is active.
+2026-03-31 00:44:13,224 INFO 1w7Q1U-00EOEF-KZ Flag file says that strict-from-count is active.
+
+Desglose:
+Flag file says that     → tipo de evento: archivo de configuración/flag detectado
+msg-data-loading-cleanup → flag: limpieza de datos del mensaje activa
+strict-from-count        → flag: conteo estricto de remitentes activo
+
+Estos flags controlan el comportamiento del filtro SpamExperts.
+
+
+--- TIPO DE ENTRADA: Resultado DKIM detallado ---
+
+Ejemplo:
+2026-03-31 08:26:14,752 INFO 1w7XEa-00F8hL-Fb DKIM result: 'none' / '' / 'bounce.mediaware-news.com' / '' / '' / ''
+2026-03-31 08:26:14,752 INFO 1w7XEa-00F8hL-Fb DKIM result: 'pass' / '' / 'embluerpg.com' / 'embluerpg.com' / '' / 'epexo'
+
+Desglose:
+DKIM result             → tipo de dato: resultado de verificación DKIM
+'none'                  → estado: no hay firma DKIM
+'pass'                  → estado: firma DKIM válida
+'fail'                  → estado: firma DKIM inválida
+bounce.mediaware-news.com → dominio firmante
+embluerpg.com           → dominio del selector DKIM
+epexo                   → selector DKIM utilizado
+
+
+--- TIPO DE ENTRADA: Recomendación DMARC ---
+
+Ejemplo:
+2026-03-31 08:30:08,426 INFO 1w7XIK-00F9A7-SE DMARC recommendation: accept
+
+Desglose:
+2026-03-31 08:30:08,426 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7XIK-00F9A7-SE        → ID del mensaje
+DMARC recommendation    → tipo de dato: recomendación DMARC
+accept                  → acción recomendada: aceptar el mensaje
+
+Valores posibles:
+  accept     → aceptar el mensaje
+  quarantine → poner en cuarentena
+  reject     → rechazar el mensaje
+  (vacío)    → sin recomendación (sin registro DMARC)
+
+
+--- TIPO DE ENTRADA: SPF softfail ---
+
+Ejemplo:
+2026-03-31 00:44:36,537 INFO 1w7EAN-00CqsG-6h SPF softfail
+
+Desglose:
+2026-03-31 00:44:36,537 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAN-00CqsG-6h        → ID del mensaje
+SPF softfail            → resultado SPF: fallo suave (~all en lugar de -all)
+
+🔍 Indicador de posible spoofing: SPF no pasa completamente
+
+
+--- TIPO DE ENTRADA: Phishing detectado ---
+
+Ejemplo:
+2026-03-30 12:04:36,733 INFO 1w7EAN-00CqsG-6h main: phish, sub: pattern, extra: antispamcloud.phish.genphs4267
+
+Desglose:
+2026-03-30 12:04:36,733 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAN-00CqsG-6h        → ID del mensaje
+main: phish             → clasificación: phishing detectado 🔴
+sub: pattern            → método: patrón conocido
+extra: antispamcloud.phish.genphs4267 → firma específica del phishing detectado
+
+🔴 ALERTA CRÍTICA: Phishing confirmado
+
+
+--- TIPO DE ENTRADA: Acción personalizada (Custom action) ---
+
+Ejemplo:
+2026-03-30 12:04:36,735 INFO 1w7EAN-00CqsG-6h Custom action matched {'main_class': 'phish', 'action': 'fake_accept', 'sub_class': '', 'extra_class': '', 'value': 'Reject phishing with no bounce'}: phish / pattern / antispamcloud.phish.genphs4267
+
+Desglose:
+Custom action matched   → tipo de evento: regla personalizada activada
+main_class: phish       → clase principal: phishing
+action: fake_accept     → acción: aceptar sin rebotar
+value: Reject phishing with no bounce → descripción de la acción
+phish / pattern / ...   → resumen de la clasificación
+
+
+--- TIPO DE ENTRADA: URL blacklist skip ---
+
+Ejemplo:
+2026-03-31 08:26:18,287 INFO 1w7XEa-00F8hL-Fb Found instruction at se-urlyl2 to skip URLBL check for donweb.com: ['127.0.0.2']
+
+Desglose:
+2026-03-31 08:26:18,287 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7XEa-00F8hL-Fb        → ID del mensaje
+Found instruction at se-urlyl2 → regla encontrada en lista de URLs
+to skip URLBL check for → acción: omitir verificación de URL blacklist
+donweb.com              → dominio exonerado
+['127.0.0.2']           → código de respuesta DNSBL (whitelisted)
+
+
+--- TIPO DE ENTRADA: Yellow listed (reputación) ---
+
+Ejemplo:
+2026-03-31 08:30:16,275 INFO 1w7XIT-00F9Bp-D6 Yellow listed on se-reputation
+2026-03-31 00:44:36,532 INFO 1w7EAH-00Cqrs-Fk Yellow listed on Hostkarma
+
+Desglose:
+Yellow listed on        → tipo de evento: reputación amarilla (advertencia)
+se-reputation           → fuente: reputación interna de SpamExperts
+Hostkarma               → fuente: servicio Hostkarma (reputación de IPs)
+
+🟡 Indicador de advertencia: reputación dudosa, no bloqueado pero vigilado
+
+
+--- TIPO DE ENTRADA: Pyzor check ---
+
+Ejemplo:
+2026-03-30 12:04:34,823 INFO 1w7EA6-00CqrS-Fz public.pyzor.org:24441:1eeb5a98e73fcf15bb84df6dfcb8c9ae84f5997d -> Hits: 0, whitelisted: 0, key pyzor
+
+Desglose:
+2026-03-30 12:04:34,823 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EA6-00CqrS-Fz        → ID del mensaje
+public.pyzor.org:24441  → servidor Pyzor consultado
+1eeb5a98e73fc...        → hash del mensaje enviado a Pyzor
+Hits: 0                 → cantidad de reportes de spam para este hash
+whitelisted: 0          → si está en lista blanca de Pyzor
+key pyzor               → clave de caché interna
+
+Pyzor: sistema colaborativo de detección de spam por hash de contenido.
+  Hits > 0 → el contenido ha sido reportado como spam por otros usuarios.
+
+
+--- TIPO DE ENTRADA: Hostkarma check ---
+
+Ejemplo:
+2026-03-30 12:04:33,673 INFO 1w7EA6-00CqrS-Fz Hostkarma old sender domain: bancomacro.com.ar
+2026-03-30 12:04:34,113 INFO 1w7EA6-00CqrS-Fz Hostkarma QUIT
+
+Desglose:
+Hostkarma old sender domain → tipo de dato: dominio del remitente en Hostkarma
+bancomacro.com.ar        → dominio consultado
+Hostkarma QUIT           → fin de la consulta a Hostkarma
+
+Hostkarma: servicio de reputación de IPs y dominios.
+  Yellow = advertencia
+  Red = bloqueado
+  Black = spam confirmado
+
+
+--- TIPO DE ENTRADA: Direct matches ---
+
+Ejemplo:
+2026-03-30 12:04:34,581 INFO 1w7EA6-00CqrS-Fz 0.0121065375303% (5/413) Direct matches.
+
+Desglose:
+2026-03-30 12:04:34,581 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EA6-00CqrS-Fz        → ID del mensaje
+0.0121065375303%        → porcentaje de coincidencia directa con spam conocido
+(5/413)                 → 5 coincidencias de 413 patrones evaluados
+Direct matches          → tipo de dato: coincidencias directas con base de datos
+
+
+--- TIPO DE ENTRADA: Cluster tokens (análisis por dominio) ---
+
+Ejemplo:
+2026-03-30 12:04:35,189 INFO 1w7EA6-00CqrS-Fz wavenet_com score: 0.169622917752, key cluster_tokens
+
+Desglose:
+2026-03-30 12:04:35,189 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EA6-00CqrS-Fz        → ID del mensaje
+wavenet_com score       → puntuación específica para el dominio wavenet.com
+0.169622917752          → valor de la puntuación (bajo = legítimo)
+key cluster_tokens      → tipo de análisis: tokens agrupados por dominio
+
+
+--- TIPO DE ENTRADA: Mensaje sin dirección de remitente ---
+
+Ejemplo:
+2026-03-31 00:44:38,103 INFO 1w7Q1t-00EOEe-LC No sender address. Message may be a bounce
+
+Desglose:
+2026-03-31 00:44:38,103 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7Q1t-00EOEe-LC        → ID del mensaje
+No sender address       → el mensaje no tiene dirección de remitente
+Message may be a bounce → puede ser un rebote automático (bounce)
+
+
+--- TIPO DE ENTRADA: Mensaje local ---
+
+Ejemplo:
+2026-03-31 08:30:07,404 INFO 1w7XIN-00F9AN-03 Locally generated message
+
+Desglose:
+2026-03-31 08:30:07,404 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7XIN-00F9AN-03        → ID del mensaje
+Locally generated message → el mensaje fue generado localmente en el servidor
+
+
+--- TIPO DE ENTRADA: Mensaje con List-ID (lista de correo) ---
+
+Ejemplo:
+2026-03-31 08:30:08,098 INFO 1w7XIK-00F95S-RT Message has List-ID header, so looks like it's from a list.
+
+Desglose:
+2026-03-31 08:30:08,098 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7XIK-00F95S-RT        → ID del mensaje
+Message has List-ID header → el correo tiene encabezado List-ID
+so looks like it's from a list → es un correo de lista de distribución
+
+
+--- TIPO DE ENTRADA: Mensaje con List-Unsubscribe ---
+
+Ejemplo:
+2026-03-30 12:04:41,960 INFO 1w7EAS-00Cqsk-RW Message has List-Unsubscribe header, so looks like it's from a list.
+
+Desglose:
+2026-03-30 12:04:41,960 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAS-00Cqsk-RW        → ID del mensaje
+Message has List-Unsubscribe header → tiene encabezado de desuscripción
+so looks like it's from a list → es un correo de lista/marketing
+
+
+--- TIPO DE ENTRADA: Dominio filtrado por IP ---
+
+Ejemplo:
+2026-03-30 12:04:42,238 INFO 1w7EAP-00CqsV-4O Domain civiles.org.ar is filtered (ip match): 45.173.1.25
+
+Desglose:
+2026-03-30 12:04:42,238 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAP-00CqsV-4O        → ID del mensaje
+Domain civiles.org.ar   → dominio evaluado
+is filtered (ip match)  → el dominio está filtrado por coincidencia de IP
+45.173.1.25             → IP que coincide con el filtro
+
+
+--- TIPO DE ENTRADA: DNSBL spam ---
+
+Ejemplo:
+2026-03-31 00:44:03,180 INFO 1w7Q1I-00EOC0-3J main: spam, sub: dnsbl, extra: sh-zen.rbl.spamrl.com
+
+Desglose:
+2026-03-31 00:44:03,180 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7Q1I-00EOC0-3J        → ID del mensaje
+main: spam              → clasificación: spam confirmado 🔴
+sub: dnsbl              → método: DNS blacklist
+extra: sh-zen.rbl.spamrl.com → lista DNS específica donde está listado
+
+🔴 ALERTA: Spam confirmado por DNSBL
+
+
+--- TIPO DE ENTRADA: Heuristic spam ---
+
+Ejemplo:
+... INFO 1w7XXX-XXXXXX-XX main: spam, sub: heuristic, extra: line length XXXXX
+
+Desglose:
+main: spam              → clasificación: spam confirmado 🔴
+sub: heuristic          → método: análisis heurístico
+extra: line length XXXXX → patrón detectado: longitud de línea anormal
+
+🔴 ALERTA: Spam confirmado por análisis heurístico
+
+
+--- TIPO DE ENTRADA: Whitelisted ---
+
+Ejemplo:
+... INFO 1w7XXX-XXXXXX-XX main: whitelisted, sub: sender, extra: from
+
+Desglose:
+main: whitelisted       → clasificación: en lista blanca ✅
+sub: sender             → motivo: reputación del remitente
+extra: from             → detalle: dirección FROM verificada
+
+✅ Mensaje legítimo confirmado
+
+
+--- TIPO DE ENTRADA: Attachment info ---
+
+Ejemplo:
+... INFO 1w7EAT-00Cqsy-Q5 faca0000700114788.pdf is application/octet-stream
+... INFO 1w7EAT-00Cqsy-Q5 faca0000700114788afip.xml is application/octet-stream
+
+Desglose:
+2026-03-30 12:04:42,432 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAT-00Cqsy-Q5        → ID del mensaje
+faca0000700114788.pdf   → nombre del archivo adjunto
+is application/octet-stream → tipo MIME detectado
+
+🔍 Útil para detectar adjuntos sospechosos o maliciosos
+
+
+--- TIPO DE ENTRADA: Skip DNSBL por autenticación ---
+
+Ejemplo:
+2026-03-30 12:04:38,145 INFO 1w7EAP-00CqsV-4O Skipping DNSBL for auth-by-IP
+
+Desglose:
+2026-03-30 12:04:38,145 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAP-00CqsV-4O        → ID del mensaje
+Skipping DNSBL for auth-by-IP → se omite DNSBL porque el remitente está
+                                 autenticado por IP
+
+
+--- TIPO DE ENTRADA: SEM new sender domain ---
+
+Ejemplo:
+2026-03-30 12:04:41,697 INFO 1w7EAR-00Cqsd-79 SEM new sender domain: velquorix92.net
+2026-03-30 12:04:41,693 INFO 1w7EAR-00Cqsd-79 velquorix92.net is 7-10 days old.
+
+Desglose:
+2026-03-30 12:04:41,697 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAR-00Cqsd-79        → ID del mensaje
+SEM new sender domain   → tipo de dato: nuevo dominio de remitente (Spam
+                           Email Mining - detección de dominios nuevos)
+velquorix92.net         → dominio nuevo detectado
+is 7-10 days old        → antigüedad del dominio
+
+🟡 Indicador de advertencia: dominios nuevos pueden ser sospechosos
+
+
+--- TIPO DE ENTRADA: No BL listed on HostKarma ---
+
+Ejemplo:
+2026-03-30 12:04:41,188 INFO 1w7EAR-00Cqsd-79 No BL listed on HostKarma
+
+Desglose:
+2026-03-30 12:04:41,188 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAR-00Cqsd-79        → ID del mensaje
+No BL listed on HostKarma → el dominio/IP NO está en blacklist de HostKarma
+                            (resultado negativo = bueno ✅)
+
+
+--- TIPO DE ENTRADA: Permanent skip-DNSBL ---
+
+Ejemplo:
+2026-03-30 12:04:39,850 INFO 1w7EAO-00CqsK-EH Permanent skip-DNSBL instruction
+
+Desglose:
+2026-03-30 12:04:39,850 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAO-00CqsK-EH        → ID del mensaje
+Permanent skip-DNSBL instruction → regla permanente para omitir DNSBL
+                                    (dominio/IP confiable)
+
+
+--- TIPO DE ENTRADA: From/Reply-To free provider check ---
+
+Ejemplo:
+2026-03-30 12:04:33,556 INFO 1w7EAG-00Cqrr-PK From and Reply-To are not both free providers (Susana Osoro <susanaosoro@yahoo.com.ar> / )
+
+Desglose:
+2026-03-30 12:04:33,556 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAG-00Cqrr-PK        → ID del mensaje
+From and Reply-To are not both free providers → verificación de encabezados
+Susana Osoro <susanaosoro@yahoo.com.ar> → nombre y correo del From
+/ (vacío)               → Reply-To (vacío = no hay encabezado Reply-To)
+
+🔍 Útil para detectar spoofing: From y Reply-To de proveedores diferentes
+
+
+--- TIPO DE ENTRADA: Message gone through count ---
+
+Ejemplo:
+2026-03-30 12:04:33,565 INFO 1w7EAG-00Cqrr-PK This message has gone through us 0 times.
+2026-03-30 12:04:37,783 INFO 1w7EAP-00CqsV-4O This message has gone through us 1 times.
+
+Desglose:
+2026-03-30 12:04:33,565 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAG-00Cqrr-PK        → ID del mensaje
+This message has gone through us X times → cantidad de veces que el mensaje
+                                            pasó por el filtro SpamExperts
+0 times = primera vez
+1+ times = reenviado/reprocesado
+
+
+--- TIPO DE ENTRADA: @gmail.com dots check ---
+
+Ejemplo:
+2026-03-30 12:04:37,783 INFO 1w7EAP-00CqsV-4O @gmail.com address has 0 dots.
+
+Desglose:
+2026-03-30 12:04:37,783 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAP-00CqsV-4O        → ID del mensaje
+@gmail.com address has 0 dots → verificación de puntos en dirección Gmail
+                                 (Gmail ignora los puntos, útil para detección)
+
+
+--- TIPO DE ENTRADA: Age check ---
+
+Ejemplo:
+2026-03-30 12:04:35,215 INFO 1w7EA6-00CqrS-Fz age: 0.15
+2026-03-30 12:04:42,776 INFO 1w7EAR-00Cqsd-79 age: 0.6,0.65,0.5
+
+Desglose:
+2026-03-30 12:04:35,215 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EA6-00CqrS-Fz        → ID del mensaje
+age: 0.15               → puntuación de antigüedad del mensaje/dominio
+age: 0.6,0.65,0.5       → múltiples puntuaciones de antigüedad
+
+Valores más altos = dominio/mensaje más antiguo = más confiable
+
+
+--- TIPO DE ENTRADA: Sender score ---
+
+Ejemplo:
+2026-03-30 12:04:35,215 INFO 1w7EA6-00CqrS-Fz sender: 0.2,0.45
+
+Desglose:
+2026-03-30 12:04:35,215 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EA6-00CqrS-Fz        → ID del mensaje
+sender: 0.2,0.45        → puntuación de reputación del remitente
+
+Valores más bajos = mejor reputación
+
+
+--- TIPO DE ENTRADA: sa-filter-active ---
+
+Ejemplo:
+2026-03-30 12:04:35,215 INFO 1w7EA6-00CqrS-Fz sa-filter-active is not set.
+
+Desglose:
+2026-03-30 12:04:35,215 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EA6-00CqrS-Fz        → ID del mensaje
+sa-filter-active is not set → SpamAssassin filter no está activo para este
+                               mensaje (se usa solo CRM114)
+
+
+--- TIPO DE ENTRADA: Ignoring sender domain for age checks ---
+
+Ejemplo:
+2026-03-30 12:04:42,238 INFO 1w7EAP-00CqsV-4O Ignoring sender domain civiles.org.ar for age checks.
+2026-03-30 12:04:42,239 INFO 1w7EAP-00CqsV-4O Ignoring sender domain wavenet.com for age checks.
+
+Desglose:
+2026-03-30 12:04:42,238 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAP-00CqsV-4O        → ID del mensaje
+Ignoring sender domain  → tipo de evento: dominio excluido de verificación
+civiles.org.ar          → dominio ignorado
+for age checks          → motivo: verificación de antigüedad
+
+Estos dominios son internos/confiables y se excluyen de ciertos controles.
+
+
+--- TIPO DE ENTRADA: No custom rules ---
+
+Ejemplo:
+2026-03-30 12:04:42,423 INFO 1w7EAT-00Cqsy-Q5 No custom rules for this message, skipping filter.
+
+Desglose:
+2026-03-30 12:04:42,423 → fecha/hora con milisegundos
+INFO                    → nivel de log
+1w7EAT-00Cqsy-Q5        → ID del mensaje
+No custom rules for this message → no hay reglas personalizadas aplicables
+skipping filter         → se omite el filtro de reglas custom
+
+
+================================================================================
+ARCHIVO 3: Reprote-spam.txt
+================================================================================
+Origen: grep -i "spamhaus\|zen\|dbl\|hbl" /var/log/exim4/mainlog
+Descripción: Filtra todas las líneas del mainlog que mencionan Spamhaus ZEN,
+             DBL o HBL. Muestra rechazos por blacklist de Spamhaus.
+
+--- TIPO DE ENTRADA: IP listada en Spamhaus ZEN ---
+
+Ejemplo:
+2026-04-06 00:01:21 [2810854] 1w9aDI-00BnEM-2p F=root@vps18.falesiaho.com H=vps18.falesiaho.com [194.38.20.143] I=[45.173.0.25]:25 P=esmtp rejected by local_scan(): The sending IP ( 194.38.20.143 ) is listed on Spamhaus ZEN. See https://check.spamhaus.org/
+
+Desglose:
+2026-04-06 00:01:21     → fecha/hora
+[2810854]               → PID del proceso
+1w9aDI-00BnEM-2p        → ID del mensaje
+F=root@vps18.falesiaho.com → FROM (remitente)
+H=vps18.falesiaho.com   → hostname del remitente
+[194.38.20.143]         → IP del remitente (listada en Spamhaus ZEN) 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+P=esmtp                 → protocolo
+rejected by local_scan() → rechazado por filtro SpamExperts
+The sending IP (...) is listed on Spamhaus ZEN → motivo
+See https://check.spamhaus.org/ → URL para verificar el estado de la IP
+
+🔴 Spamhaus ZEN: lista combinada de SBL (spam), XBL (exploits), PBL (policy)
+
+
+--- TIPO DE ENTRADA: URL listada en Spamhaus DBL ---
+
+Ejemplo:
+2026-04-06 00:16:46 [2816560] 1w9aS7-00BoiO-FN F=kuymaxkuymax9@gmail.com H=mail-qv1-f70.google.com [209.85.219.70] I=[45.173.0.25]:25 P=esmtps rejected by local_scan(): An URL in this email ( instatool . site ) is listed by Spamhaus DBL. See https://check.spamhaus.org/
+
+Desglose:
+2026-04-06 00:16:46     → fecha/hora
+[2816560]               → PID del proceso
+1w9aS7-00BoiO-FN        → ID del mensaje
+F=kuymaxkuymax9@gmail.com → FROM (remitente)
+H=mail-qv1-f70.google.com → hostname del servidor origen
+[209.85.219.70]         → IP del servidor origen 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+P=esmtps                → protocolo (ESMTP sobre TLS)
+rejected by local_scan() → rechazado por filtro SpamExperts
+An URL in this email ( instatool . site ) is listed by Spamhaus DBL
+                        → motivo: una URL en el correo está en la lista DBL
+                        → (Domain Block List = dominios de spam/phishing)
+
+🔴 Spamhaus DBL: Domain Block List (dominios usados en spam/phishing)
+
+
+--- TIPO DE ENTRADA: Dirección listada en Spamhaus HBL ---
+
+Ejemplo:
+2026-04-06 00:22:10 [2818672] 1w9aXO-00BpGS-SW F=aerocesnaescuela@gmail.com H=mail-qv1-f53.google.com [209.85.219.53] I=[45.173.0.25]:25 P=esmtps rejected by local_scan(): An address in this email ( clark.digihub (at) outlook . com ) is listed by Spamhaus HBL. See https://check.spamhaus.org/
+
+Desglose:
+2026-04-06 00:22:10     → fecha/hora
+[2818672]               → PID del proceso
+1w9aXO-00BpGS-SW        → ID del mensaje
+F=aerocesnaescuela@gmail.com → FROM (remitente)
+H=mail-qv1-f53.google.com → hostname del servidor origen
+[209.85.219.53]         → IP del servidor origen 🔥
+I=[45.173.0.25]:25      → interfaz del servidor
+P=esmtps                → protocolo
+rejected by local_scan() → rechazado por filtro SpamExperts
+An address in this email ( clark.digihub (at) outlook . com ) is listed by Spamhaus HBL
+                        → motivo: una dirección en el correo está en HBL
+                        → (Hash Block List = hashes de direcciones spam)
+
+🔴 Spamhaus HBL: Hash Block List (hashes de direcciones de spam)
+
+
+--- TIPO DE ENTRADA: Mensaje congelado (Frozen) ---
+
+Ejemplo:
+... Frozen (delivery error message)
+
+Desglose:
+Frozen                  → estado del mensaje: congelado en cola
+(delivery error message) → motivo: error de entrega
+
+Los mensajes "frozen" quedan en cola de Exim sin reintentar entrega.
+Generalmente son bounces que no pueden ser entregados.
+
+
+================================================================================
+ARCHIVO 4: logs-exim4-mainlog/exim4-mainlog.txt (y 2, 3)
+================================================================================
+Origen: /var/log/exim4/mainlog (extractos completos)
+Descripción: Log principal de Exim4 sin filtrar. Contiene TODOS los eventos
+             de correo: entradas, salidas, rechazos, autenticaciones, TLS,
+             DMARC, rate limiting, etc.
+
+Los tipos de entrada son los mismos detallados en el ARCHIVO 1 (logs-ip-server.txt)
+ya que es el mismo formato de log, solo que sin filtrar por IP.
+
+Adicionalmente, este log incluye eventos que NO involucran la IP 45.173.0.25,
+como conexiones internas entre servidores del cluster.
+
+--- TIPO DE ENTRADA: Entrega con múltiples destinatarios ---
+
+Ejemplo:
+2026-03-30 10:40:26 [3005514] 1w7Cqn-00CbqT-IP => melhall@yuhmak.com.ar R=spamexperts T=remote_smtp_batv H=mail.yuhmak.com.ar [45.173.1.59] I=[45.173.1.16] CV=yes C="250 2.6.0 11951 bytes received in 00:00:01; Message id 202603301040241233 accepted for delivery"
+2026-03-30 10:40:26 [3005513] 1w7Cqn-00CbqX-Tk => jorgeobeide@yuhmak.com.ar R=spamexperts T=remote_smtp_batv H=mail.yuhmak.com.ar [45.173.1.59] I=[45.173.1.16] CV=yes C="250 2.6.0 11963 bytes received in 00:00:01; Message id 202603301040241231 accepted for delivery"
+
+Desglose:
+Mismo ID de mensaje (1w7Cqn-00CbqT-IP) aparece en múltiples líneas =>
+el mismo correo se entregó a múltiples destinatarios.
+Cada línea representa una entrega individual.
+
+
+--- TIPO DE ENTRADA: DMARC Quarantine con blackhole ---
+
+Ejemplo:
+2026-03-30 10:40:38 [3005609] 1w7Cr7-00CbtZ-Id => blackhole Sender's policy prohibits this message: Quarantine
+
+Desglose:
+2026-03-30 10:40:38     → fecha/hora
+[3005609]               → PID del proceso
+1w7Cr7-00CbtZ-Id        → ID del mensaje
+=> blackhole            → mensaje descartado
+Sender's policy prohibits this message: Quarantine
+                        → motivo: la política DMARC del remitente prohíbe
+                          este mensaje (falla SPF y DKIM)
+
+
+--- TIPO DE ENTRADA: Error SMTP remoto detallado ---
+
+Ejemplo:
+2026-03-30 10:40:53 [3005628] 1w7Cr8-00CZja-Gk ** postmaster@ceproalarm.com.ve R=spamexperts_managed_dnslookup T=spamexperts_managed_smtp H=mail.ceproalarm.com.ve [108.179.242.225] I=[45.173.0.25] X=TLS1.2:ECDHE-RSA-AES256-GCM-SHA384:256 CV=no: SMTP error from remote mail server after RCPT TO:<postmaster@ceproalarm.com.ve>: 550 No Such User Here"
+
+Desglose:
+2026-03-30 10:40:53     → fecha/hora
+[3005628]               → PID del proceso
+1w7Cr8-00CZja-Gk        → ID del mensaje
+**                      → error FATAL en entrega
+postmaster@ceproalarm.com.ve → destinatario que falló
+R=spamexperts_managed_dnslookup → router
+T=spamexperts_managed_smtp → transporte
+H=mail.ceproalarm.com.ve → hostname destino
+[108.179.242.225]       → IP destino 🔥
+I=[45.173.0.25]         → interfaz de salida
+X=TLS1.2:...            → cifrado TLS
+CV=no                   → certificado no verificado
+SMTP error from remote mail server → error del servidor remoto
+after RCPT TO:<...>     → fase SMTP del error
+550 No Such User Here   → código y mensaje de error: usuario no existe
+
+
+================================================================================
+ARCHIVO 5: logs-spamexperts-local_scan/spamexperts-local_scan.log.txt (y 2, 3)
+================================================================================
+Origen: /var/log/spamexperts/local_scan.log (extractos completos)
+Descripción: Log detallado de SpamExperts. Contiene el análisis completo de
+             cada mensaje: DKIM, DMARC, SPF, Pyzor, Hostkarma, CRM114, DNSBL,
+             URL blacklist, reputación, heurísticas, etc.
+
+Los tipos de entrada son los mismos detallados en el ARCHIVO 2
+(reporte-directo-unsure.txt) ya que es el mismo formato de log, solo que
+sin filtrar por identidad.
+
+================================================================================
+ARCHIVO 6: logs_web-antispam-experts/CSV Export OutgoingLogSearch.csv
+================================================================================
+Origen: Export CSV del panel web de SpamExperts (Outgoing Log Search)
+Descripción: Resumen tabular de correos salientes clasificados por SpamExperts.
+             Formato CSV con encabezados.
+
+Encabezados:
+"message_id","datetime","domain","username","identity","sender","recipient","main_class","subject_header","status"
+
+Desglose por columna:
+
+message_id      → ID del mensaje en Exim (ej: 1w7H0K-00DITt-1D) 🔑
+datetime        → fecha/hora del evento (ej: 2026-03-30 18:06:26)
+domain          → dominio gestionado (ej: wavenet.com.ar)
+username        → rango IP del servidor de envío (ej: 45.173.0.0/24)
+identity        → identidad de envío autenticada (ej: autogestion@civiles.org.ar) 🔥
+sender          → dirección FROM del correo (ej: autogestion@civiles.org.ar)
+recipient       → dirección destinataria (ej: appgestionerrores.colingcivcba@gmail.com) 🔥
+main_class      → clasificación principal del mensaje:
+                    not-spam  → legítimo
+                    unsure    → incierto (no confirmado spam ni legítimo) 🟡
+                    spam      → spam confirmado 🔴
+                    phish     → phishing confirmado 🔴
+                    whitelisted → en lista blanca ✅
+subject_header  → asunto del correo (ej: "Error al Actualizar Boletas desde Autogestion")
+status          → estado de entrega:
+                    delivered → entregado exitosamente ✅
+                    quarantined → en cuarentena 🟡
+                    rejected  → rechazado 🔴
+                    deferred  → diferido (reintento pendiente) 🟡
+
+Ejemplo completo desglosado:
+"1w7H0K-00DITt-1D","2026-03-30 18:06:26","wavenet.com.ar","45.173.0.0/24","autogestion@civiles.org.ar","autogestion@civiles.org.ar","appgestionerrores.colingcivcba@gmail.com","unsure","Error al Actualizar Boletas desde Autogestion","delivered"
+
+Desglose:
+1w7H0K-00DITt-1D          → ID del mensaje
+2026-03-30 18:06:26       → fecha/hora
+wavenet.com.ar            → dominio gestionado
+45.173.0.0/24             → rango IP del servidor
+autogestion@civiles.org.ar → identidad autenticada (quien envía) 🔥
+autogestion@civiles.org.ar → dirección FROM
+appgestionerrores.colingcivcba@gmail.com → destinatario 🔥
+unsure                    → clasificación: incierto 🟡
+Error al Actualizar Boletas desde Autogestion → asunto del correo
+delivered                 → estado: entregado ✅
+
+🟡 Patrón detectado: Múltiples correos con clasificación "unsure" desde
+   autogestion@civiles.org.ar con asuntos de "Error" sugieren que el sistema
+   AutoGESTION genera correos de notificación de errores que SpamExperts
+   no puede clasificar claramente como legítimos o spam. Esto puede deberse
+   a:
+   - Falta de firma DKIM en los correos generados
+   - Contenido genérico de errores que se parece a spam
+   - Patrón repetitivo de envíos (mismo remitente, mismos asuntos)
+   - Posible necesidad de whitelisting para esta identidad
+
+
+================================================================================
+RESUMEN DE CLASIFICACIONES SPAMEXPERTS
+================================================================================
+
+Clasificación principal (main:) | Significado | Nivel de alerta
+-------------------------------|-------------|----------------
+not-spam                       | Legítimo    | ✅ Verde
+unsure                         | Incierto     | 🟡 Amarillo
+spam                           | Spam         | 🔴 Rojo
+phish                          | Phishing     | 🔴 Rojo crítico
+whitelisted                    | Lista blanca | ✅ Verde confirmado
+
+Subclasificaciones (sub:) | Método de detección
+-------------------------|---------------------
+combined                 | Análisis combinado (CRM114 + otros)
+dnsbl                    | DNS Blacklist (Spamhaus, SpamRL, etc.)
+heuristic                | Análisis heurístico (patrones, longitud, etc.)
+pattern                  | Patrón conocido (firmas Sanesecurity, etc.)
+sender                   | Reputación del remitente
+
+
+================================================================================
+RESUMEN DE BLACKLISTS
+================================================================================
+
+Blacklist | Tipo | Qué bloquea
+----------|------|------------
+Spamhaus ZEN | IP | Lista combinada: SBL (spam), XBL (exploits), PBL (policy)
+Spamhaus DBL | Dominio | Domain Block List: dominios usados en spam/phishing
+Spamhaus HBL | Hash | Hash Block List: hashes de direcciones de spam
+Hostkarma | IP/Dominio | Reputación: Yellow (advertencia), Red (bloqueado)
+se-reputation | IP/Dominio | Reputación interna de SpamExperts
+se-dnsbl.rbl.spamrl.com | IP | DNSBL de SpamRL
+sh-zen.rbl.spamrl.com | IP | Spamhaus ZEN vía SpamRL
+
+
+================================================================================
+RESUMEN DE PUERTOS SMTP
+================================================================================
+
+Puerto | Uso | Cifrado
+-------|-----|--------
+25     | SMTP (recepción de correo entre servidores) | STARTTLS (esmtps)
+465    | SMTPS (envío seguro, implícito TLS) | TLS implícito
+587    | Submission (envío de clientes autenticados) | STARTTLS
+
+
+================================================================================
+INDICADORES DE ATAQUE/SPAM DETECTABLES
+================================================================================
+
+🔴 CRÍTICO:
+- main: phish → Phishing confirmado
+- main: spam → Spam confirmado
+- Spamhaus ZEN/DBL/HBL → IP/dominio/hash en blacklist
+- rejected by local_scan() → Rechazo por contenido spam
+
+🟡 ADVERTENCIA:
+- main: unsure → Clasificación incierta
+- Yellow listed → Reputación dudosa
+- SPF softfail → Fallo suave de SPF
+- DKIM none/fail → Sin firma DKIM o inválida
+- DMARC quarantine → Política DMARC de cuarentena
+- sending too fast → Rate limit excedido
+- Invalid HELO → HELO inválido (tácticas de spam)
+- User unknown → Buzón inexistente (scanning)
+
+✅ POSITIVO:
+- main: not-spam → Legítimo
+- main: whitelisted → Confirmado legítimo
+- DMARC accept → DMARC pasa
+- DKIM pass → Firma DKIM válida
+- is sending ok → Dentro del rate limit
+
+
+================================================================================
+FIN DEL DESGLOSE
+================================================================================
+Generado a partir del análisis de todos los archivos en Ejemplo-de-logs/
+Servidor: antispam-01.wavenet.com (45.173.0.25)
+Sistema: Exim4 + SpamExperts
+Fecha de análisis: 2026-04-06
+================================================================================
