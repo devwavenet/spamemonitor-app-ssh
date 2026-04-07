@@ -247,7 +247,13 @@ CÓMO FUNCIONA (paso a paso):
      → Esto captura entradas donde el destinatario es solo un dominio,
        no una dirección específica
 
-  6. Agrupa y ordena por cantidad
+  6. BUSCADOR FLEXIBLE:
+     → Pide al usuario un término de búsqueda (dominio o texto)
+     → Si se ingresa algo: filtra con index($2, termino) > 0
+     → Si se presiona Enter: muestra todos los dominios
+     → Búsqueda por substring: buscar "wavenet" matchea "wavenet.com.ar"
+
+  7. Agrupa y ordena por cantidad
 
 QUÉ REVELA EN LOS LOGS REALES:
   En los logs se ven dominios como:
@@ -292,7 +298,13 @@ CÓMO FUNCIONA (paso a paso):
      El -A1 (after 1) busca la línea posterior porque en el log,
      la Submission identity aparece DESPUÉS de la clasificación.
 
-  3. Extrae la identidad, agrupa y ordena (mismo proceso que opción 1)
+  3. BUSCADOR FLEXIBLE:
+     → Pide al usuario un email o término de búsqueda
+     → Si se ingresa algo: filtra con index($2, email) > 0
+     → Si se presiona Enter: muestra todos los remitentes unsure
+     → Búsqueda por substring: buscar "civiles" matchea "autogestion@civiles.org.ar"
+
+  4. Extrae la identidad, agrupa y ordena (mismo proceso que opción 1)
 
 QUÉ REVELA EN LOS LOGS REALES:
   Este es el caso MÁS IMPORTANTE detectado en los logs analizados.

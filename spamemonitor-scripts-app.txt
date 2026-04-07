@@ -104,13 +104,20 @@ incomings_domain_spam() {
     return 1
   fi
 
+  read -p "Ingrese el dominio o término a buscar (o presione Enter para ver todos): " domain_input
+
   zgrep "Queuing incoming spam message" "$LOG" \
     | awk -F'for ' '{print $2}' \
     | tr ',' '\n' \
     | sed 's/[[:space:]]//g; s/\.$//' \
     | grep -v '@' \
     | sort | uniq -c | sort -nr \
-    | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}'
+    | awk -v domain="$domain_input" -v y="$COLOR_YELLOW" -v n="$NC" '
+      {
+        if (domain == "" || index($2, domain) > 0) {
+          printf "%s%d%s %s\n", y, $1, n, $2
+        }
+      }'
 
   echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
 }
@@ -133,13 +140,20 @@ unsure_outgoings_email_spam() {
     return 1
   fi
 
+  read -p "Ingrese el correo electrónico a buscar (o presione Enter para ver todos): " email_input
+
   # Busca líneas con "Submission identity" en mensajes clasificados como "unsure"
   # La Submission identity aparece justo después de "main: unsure" en el log
   zgrep "main: unsure" "$LOG" -A1 \
     | grep "Submission identity" \
     | awk -F': ' '{print $2}' \
     | sort | uniq -c | sort -nr \
-    | awk -v y="$COLOR_YELLOW" -v n="$NC" '{printf "%s%d%s %s\n", y, $1, n, $2}'
+    | awk -v email="$email_input" -v y="$COLOR_YELLOW" -v n="$NC" '
+      {
+        if (email == "" || index($2, email) > 0) {
+          printf "%s%d%s %s\n", y, $1, n, $2
+        }
+      }'
 
   echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
 }

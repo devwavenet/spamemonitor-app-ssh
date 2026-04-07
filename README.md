@@ -194,7 +194,8 @@ Cada opción ejecuta una función específica y muestra resultados en pantalla. 
 1. Misma búsqueda que opción 2: `"Queuing incoming spam message"`
 2. Misma extracción y limpieza
 3. **Diferencia clave:** `grep -v '@'` — excluye emails, deja solo dominios sueltos
-4. Agrupa y ordena por cantidad
+4. **Buscador flexible:** Permite filtrar por dominio o término (búsqueda por substring) o mostrar todos
+5. Agrupa y ordena por cantidad
 
 **Qué revela:** Si un dominio entero recibe spam masivo (no solo un buzón), puede indicar un data breach, configuración DNS débil, o ataque generalizado.
 
@@ -220,7 +221,8 @@ Cada opción ejecuta una función específica y muestra resultados en pantalla. 
 **Cómo funciona:**
 1. Busca `"main: unsure"` en el log (clasificación principal de SpamExperts)
 2. Usa `zgrep -A1` para obtener la línea siguiente con `"Submission identity"`
-3. Extrae la identidad, agrupa y ordena
+3. **Buscador flexible:** Permite filtrar por email, dominio o término (búsqueda por substring) o mostrar todos
+4. Extrae la identidad, agrupa y ordena
 
 **Qué revela:** Esta es la función más valiosa para detectar **falsos positivos**. Sistemas automáticos internos sin DKIM, con contenido genérico o patrones repetitivos caen aquí.
 
