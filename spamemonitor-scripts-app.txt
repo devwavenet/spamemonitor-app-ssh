@@ -393,15 +393,6 @@ check_blacklist_drops() {
     echo -e "  ${COLOR_RED}⚠️  Log de Exim no disponible${NC}"
   fi
 
-  echo -e "\n${COLOR_YELLOW}🟡 Hostkarma (Yellow Listed):${NC}"
-  if [[ -f "$SPAMLOG" ]]; then
-    local hostkarma_count
-    hostkarma_count=$(grep -ci "Yellow listed on Hostkarma" "$SPAMLOG" 2>/dev/null || echo 0)
-    echo "  Total advertencias: $hostkarma_count"
-  else
-    echo -e "  ${COLOR_RED}⚠️  Log de SpamExperts no disponible${NC}"
-  fi
-
   echo -e "\n${COLOR_YELLOW}🔴 SpamRL / Otras listas:${NC}"
   if [[ -f "$EXIMLOG" ]]; then
     local spamrl_result
@@ -419,18 +410,14 @@ check_blacklist_drops() {
   fi
 
   echo -e "\n${COLOR_YELLOW}📊 Resumen de Blacklists:${NC}"
-  local spamhaus_count=0 hostkarma_count=0 spamrl_count=0
-  
+  local spamhaus_count=0 spamrl_count=0
+
   if [[ -f "$EXIMLOG" ]]; then
     spamhaus_count=$(grep -ci "spamhaus\|zen\|dbl\|hbl" "$EXIMLOG" 2>/dev/null || echo 0)
     spamrl_count=$(grep -ci "spamrl" "$EXIMLOG" 2>/dev/null || echo 0)
   fi
-  if [[ -f "$SPAMLOG" ]]; then
-    hostkarma_count=$(grep -ci "Yellow listed on Hostkarma" "$SPAMLOG" 2>/dev/null || echo 0)
-  fi
 
   echo "  Spamhaus: $spamhaus_count eventos"
-  echo "  Hostkarma: $hostkarma_count eventos"
   echo "  SpamRL: $spamrl_count eventos"
 
   echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
