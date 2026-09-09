@@ -355,7 +355,45 @@ search_quarantined_mails() {
     return 1
   fi
 
-  grep -Rl "$busqueda" "$QUARANTINE_DIR" 2>/dev/null
+  echo -e "\n${COLOR_CYAN}🔍 Buscando archivos asociados a: ${COLOR_YELLOW}$busqueda${NC}\n"
+
+  local files=()
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && files+=("$line")
+  done < <(grep -Rl "$busqueda" "$QUARANTINE_DIR" 2>/dev/null)
+
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo -e "${COLOR_RED}⚠️  No se encontraron archivos en cuarentena para el Message ID '$busqueda'.${NC}"
+    echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
+    return 0
+  fi
+
+  echo -e "${COLOR_GREEN}Se encontraron los siguientes ${#files[@]} archivo(s):${NC}\n"
+
+  local idx=1
+  for file in "${files[@]}"; do
+    echo -e " ${COLOR_YELLOW}${idx})${NC} $file"
+    idx=$((idx + 1))
+  done
+
+  echo ""
+  read -p "Ingrese el número de opción para abrir con 'cat' (o presione Enter para volver): " sel_num
+
+  if [[ -z "$sel_num" ]]; then
+    echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
+    return 0
+  fi
+
+  if [[ "$sel_num" =~ ^[0-9]+$ ]] && (( sel_num >= 1 && sel_num <= ${#files[@]} )); then
+    local chosen_file="${files[$((sel_num - 1))]}"
+    echo -e "\n${COLOR_CYAN}====================================================${NC}"
+    echo -e "${COLOR_CYAN}📄 Mostrando contenido de:${NC} ${COLOR_YELLOW}$chosen_file${NC}"
+    echo -e "${COLOR_CYAN}====================================================${NC}\n"
+    cat "$chosen_file"
+    echo -e "\n${COLOR_CYAN}====================================================${NC}"
+  else
+    echo -e "${COLOR_RED}⚠️  Opción inválida.${NC}"
+  fi
 
   echo -e "\n${COLOR_YELLOW}=== Fin de la búsqueda ===${NC}\n"
 }
@@ -377,48 +415,127 @@ check_blacklist_drops() {
     return 1
   fi
 
-  echo -e "\n${COLOR_YELLOW}🚫 Spamhaus (ZEN/DBL/HBL):${NC}"
-  if [[ -f "$EXIMLOG" ]]; then
-    local spamhaus_result
-    spamhaus_result=$(grep -i "spamhaus\|zen\|dbl\|hbl" "$EXIMLOG" 2>/dev/null | \
-    sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
-    sort | uniq -c | sort -nr | head -10)
+  read -p "Ingrese la IP a verificar en Blacklists (o presione Enter para ver el Top 10 general): " ip_input
 
-    if [[ -n "$spamhaus_result" ]]; then
-      echo "$spamhaus_result" | awk '{printf "  %d bloqueos - IP: %s\n", $1, $2}'
-    else
-      echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de Spamhaus${NC}"
+  if [[ -n "$ip_input" ]]; then
+    echo -e "\n${COLOR_CYAN}🔍 Buscando eventos de RBLs para la IP: ${COLOR_YELLOW}$ip_input${NC}\n"
+    
+    local ip_found=0
+
+    # 1. Búsqueda en Exim mainlog
+    if [[ -f "$EXIMLOG" ]]; then
+      echo -e "${COLOR_YELLOW}📋 Registros en Exim4 mainlog:${NC}"
+      local exim_matches
+      exim_matches=$(grep -i "$ip_input" "$EXIMLOG" 2>/dev/null | grep -i "rejected\|listed on" | grep -i "spamhaus\|zen\|dbl\|hbl\|spamrl\|surbl\|invaluement\|local_scan\|RBL")
+
+      if [[ -n "$exim_matches" ]]; then
+        ip_found=1
+        local count
+        count=$(echo "$exim_matches" | wc -l)
+        echo -e "${COLOR_RED}⚠️  Se encontraron $count bloqueo(s) por RBLs en Exim4 mainlog:${NC}\n"
+        echo "$exim_matches"
+      else
+        echo -e "  ${COLOR_GREEN}✅ Sin bloqueos RBL registrados en Exim4 mainlog para $ip_input${NC}"
+      fi
     fi
-  else
-    echo -e "  ${COLOR_RED}⚠️  Log de Exim no disponible${NC}"
-  fi
 
-  echo -e "\n${COLOR_YELLOW}🔴 SpamRL / Otras listas:${NC}"
-  if [[ -f "$EXIMLOG" ]]; then
-    local spamrl_result
-    spamrl_result=$(grep -i "spamrl\|listed on" "$EXIMLOG" 2>/dev/null | \
-    sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
-    sort | uniq -c | sort -nr | head -10)
+    # 2. Búsqueda en SpamExperts local_scan.log
+    if [[ -f "$SPAMLOG" ]]; then
+      echo -e "\n${COLOR_YELLOW}📋 Registros en SpamExperts local_scan.log:${NC}"
+      local spam_matches
+      spam_matches=$(grep -i "$ip_input" "$SPAMLOG" 2>/dev/null | grep -i "dnsbl\|hostkarma\|spam\|listed")
 
-    if [[ -n "$spamrl_result" ]]; then
-      echo "$spamrl_result" | awk '{printf "  %d - IP: %s\n", $1, $2}'
-    else
-      echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de SpamRL${NC}"
+      if [[ -n "$spam_matches" ]]; then
+        ip_found=1
+        local count_spam
+        count_spam=$(echo "$spam_matches" | wc -l)
+        echo -e "${COLOR_RED}⚠️  Se encontraron $count_spam evento(s) en SpamExperts local_scan.log:${NC}\n"
+        echo "$spam_matches"
+      else
+        echo -e "  ${COLOR_GREEN}✅ Sin registros adversos en SpamExperts local_scan.log para $ip_input${NC}"
+      fi
     fi
+
+    if [[ $ip_found -eq 0 ]]; then
+      echo -e "\n${COLOR_GREEN}✅ La IP $ip_input está limpia y no registra bloqueos en los logs.${NC}"
+    fi
+
   else
-    echo -e "  ${COLOR_RED}⚠️  Log de Exim no disponible${NC}"
+    echo -e "\n${COLOR_YELLOW}🚫 Spamhaus (ZEN/DBL/HBL):${NC}"
+    if [[ -f "$EXIMLOG" ]]; then
+      local spamhaus_result
+      spamhaus_result=$(grep -i "spamhaus\|zen\|dbl\|hbl" "$EXIMLOG" 2>/dev/null | \
+      sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
+      sort | uniq -c | sort -nr | head -10)
+
+      if [[ -n "$spamhaus_result" ]]; then
+        echo "$spamhaus_result" | awk '{printf "  %d bloqueos - IP: %s\n", $1, $2}'
+      else
+        echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de Spamhaus${NC}"
+      fi
+    else
+      echo -e "  ${COLOR_RED}⚠️  Log de Exim no disponible${NC}"
+    fi
+
+    echo -e "\n${COLOR_YELLOW}🌐 SURBL (Filtro de URLs Maliciosas):${NC}"
+    if [[ -f "$EXIMLOG" ]]; then
+      local surbl_result
+      surbl_result=$(grep -i "surbl\.org" "$EXIMLOG" 2>/dev/null | \
+      sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
+      sort | uniq -c | sort -nr | head -10)
+
+      if [[ -n "$surbl_result" ]]; then
+        echo "$surbl_result" | awk '{printf "  %d bloqueos - IP: %s\n", $1, $2}'
+      else
+        echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de SURBL${NC}"
+      fi
+    fi
+
+    echo -e "\n${COLOR_YELLOW}🔍 Invaluement (Reputación de Dominios/URLs):${NC}"
+    if [[ -f "$EXIMLOG" ]]; then
+      local invaluement_result
+      invaluement_result=$(grep -i "invaluement\.com" "$EXIMLOG" 2>/dev/null | \
+      sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
+      sort | uniq -c | sort -nr | head -10)
+
+      if [[ -n "$invaluement_result" ]]; then
+        echo "$invaluement_result" | awk '{printf "  %d bloqueos - IP: %s\n", $1, $2}'
+      else
+        echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de Invaluement${NC}"
+      fi
+    fi
+
+    echo -e "\n${COLOR_YELLOW}🔴 SpamRL / Otras listas:${NC}"
+    if [[ -f "$EXIMLOG" ]]; then
+      local spamrl_result
+      spamrl_result=$(grep -i "spamrl\|listed on" "$EXIMLOG" 2>/dev/null | grep -v -i "spamhaus\|surbl\|invaluement" | \
+      sed -n 's/.*H=[^ ]* \[\([0-9.]*\)\].*/\1/p' | \
+      sort | uniq -c | sort -nr | head -10)
+
+      if [[ -n "$spamrl_result" ]]; then
+        echo "$spamrl_result" | awk '{printf "  %d - IP: %s\n", $1, $2}'
+      else
+        echo -e "  ${COLOR_GREEN}✅ Sin bloqueos de SpamRL/Otras${NC}"
+      fi
+    else
+      echo -e "  ${COLOR_RED}⚠️  Log de Exim no disponible${NC}"
+    fi
+
+    echo -e "\n${COLOR_YELLOW}📊 Resumen de Blacklists / Servicios de Reputación:${NC}"
+    local spamhaus_count=0 surbl_count=0 invaluement_count=0 spamrl_count=0
+
+    if [[ -f "$EXIMLOG" ]]; then
+      spamhaus_count=$(grep -ci "spamhaus\|zen\|dbl\|hbl" "$EXIMLOG" 2>/dev/null || echo 0)
+      surbl_count=$(grep -ci "surbl\.org" "$EXIMLOG" 2>/dev/null || echo 0)
+      invaluement_count=$(grep -ci "invaluement\.com" "$EXIMLOG" 2>/dev/null || echo 0)
+      spamrl_count=$(grep -ci "spamrl" "$EXIMLOG" 2>/dev/null || echo 0)
+    fi
+
+    echo "  Spamhaus:     $spamhaus_count eventos"
+    echo "  SURBL:        $surbl_count eventos"
+    echo "  Invaluement:  $invaluement_count eventos"
+    echo "  SpamRL:       $spamrl_count eventos"
   fi
-
-  echo -e "\n${COLOR_YELLOW}📊 Resumen de Blacklists:${NC}"
-  local spamhaus_count=0 spamrl_count=0
-
-  if [[ -f "$EXIMLOG" ]]; then
-    spamhaus_count=$(grep -ci "spamhaus\|zen\|dbl\|hbl" "$EXIMLOG" 2>/dev/null || echo 0)
-    spamrl_count=$(grep -ci "spamrl" "$EXIMLOG" 2>/dev/null || echo 0)
-  fi
-
-  echo "  Spamhaus: $spamhaus_count eventos"
-  echo "  SpamRL: $spamrl_count eventos"
 
   echo -e "\n${COLOR_YELLOW}=== Fin del reporte ===${NC}\n"
 }

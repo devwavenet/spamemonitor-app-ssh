@@ -16,7 +16,7 @@ Monitor de Spam interactivo para servidores con **Exim4 + SpamExperts**. Script 
   - [Sección: Spam Detection](#1-spam-detection-opciones-1-4)
   - [Sección: Mail Management](#2-mail-management-opciones-5-9)
   - [Sección: Blacklists](#3-blacklists-opción-10)
-- [Arquitectura del Sistema](#-arquitectura-del-sistema)
+- [Arquitectura del Sistema](#-arquitectura-del-sistema) ([Guía Detallada de Arquitectura SMTP](file:///c:/Users/fgarea/Desktop/spamemonitor-app-ssh/ARQUITECTURA-ANTISPAM-SMTP.md))
 - [Logs que Utiliza](#-logs-que-utiliza)
 - [Correcciones Realizadas](#-correcciones-realizadas)
 - [Patrones de Ataque Detectables](#-patrones-de-ataque-detectables)
@@ -321,17 +321,19 @@ Cada opción ejecuta una función específica y muestra resultados en pantalla. 
 
 **Función:** `search_quarantined_mails()`
 
-**Qué hace:** Busca un mensaje específico en el **directorio de cuarentena** de SpamExperts. Permite recuperar o inspeccionar mensajes puestos en cuarentena.
+**Qué hace:** Busca mensajes en el **directorio de cuarentena** de SpamExperts por su Message ID. Presenta los archivos encontrados en un menú numerado y permite abrir cualquier archivo seleccionado para inspeccionar su contenido completo usando `cat`.
 
 **Fuente de datos:** `/var/spool/mail/w/wa/` (directorio de cuarentena)
 
 **Cómo funciona:**
-1. Verifica que exista el directorio de cuarentena
-2. Pide el Message ID al usuario
-3. Usa `grep -Rl` para buscar recursivamente el ID en todos los archivos
-4. Muestra la ruta del archivo encontrado
+1. Verifica que exista el directorio de cuarentena `/var/spool/mail/w/wa/`.
+2. Pide el Message ID al usuario.
+3. Busca recursivamente con `grep -Rl "$busqueda"` y almacena los resultados en un array de Bash.
+4. Muestra la lista numerada (`1)`, `2)`, `3)`...) de todas las rutas encontradas (mensajes en `cur/`/`new/` e índices).
+5. Solicita al usuario ingresar el número del archivo que desea visualizar.
+6. Ejecuta `cat` sobre la ruta elegida mostrando los encabezados y cuerpo completo del mensaje en consola.
 
-**Qué revela:** Cuando SpamExperts clasifica un mensaje como spam/phish pero no lo rechaza, lo pone en cuarentena. Esta función permite encontrarlo y recuperarlo si es un falso positivo.
+**Qué revela:** Cuando SpamExperts clasifica un mensaje como spam/phish pero no lo rechaza, lo pone en cuarentena. Esta función permite localizar todos los archivos asociados y leer su contenido directamente para validar o liberar un falso positivo.
 
 ---
 
@@ -362,54 +364,48 @@ Cada opción ejecuta una función específica y muestra resultados en pantalla. 
 
 **Función:** `check_blacklist_drops()`
 
-**Qué hace:** Genera un **reporte completo** de todas las IPs bloqueadas por listas negras. Consulta **dos fuentes de logs** para obtener una visión completa del estado de blacklisting.
+**Qué hace:** Consulta los logs de Exim4 y SpamExperts para verificar bloqueos por listas negras (Spamhaus ZEN/DBL/HBL, SpamRL, Hostkarma). Permite auditar una **IP específica** (mostrando sus coincidencias) o generar el **reporte/Top 10 general** presionado Enter.
 
 **Fuentes de datos:**
-- `/var/log/exim4/mainlog` → para Spamhaus y SpamRL
-- `/var/log/spamexperts/local_scan.log` → para Hostkarma
+- `/var/log/exim4/mainlog` → para Spamhaus, SpamRL y bloqueos RBL
+- `/var/log/spamexperts/local_scan.log` → para DNSBL, Hostkarma y reputación
 
 **Cómo funciona:**
+1. Pide al usuario ingresar la IP a consultar (IP externa de emisor o IP de interfaz local de salida) o presionar Enter para ver el reporte general.
+2. **Si se ingresa una IP específica:**
+   - Filtra eventos en `exim4/mainlog` y `local_scan.log` buscando específicamente marcas de rechazo/bloqueo (`rejected`, `listed on`, `RBL`, `spamhaus`, `spamrl`, `surbl`, `invaluement`).
+   - **Descarte de Falsos Positivos:** Ignora explícitamente las entregas salientes exitosas de tu propio servidor (líneas con `=>` o `->` finalizadas con `250 OK` y conector de interfaz local `I=[IP]`), evitando que un envío limpio por tus IPs de salida se interprete erróneamente como un bloqueo.
+   - **Detección de Bloqueos Reales:** Si tu IP de salida o una IP remota fue rechazada o figura en una blacklist externa, muestra la cantidad exacta de rechazos y el detalle con la fecha, destinatario y motivo del rebote.
+   - Si no registra eventos adversos, confirma en verde que la IP está limpia.
+3. **Si se presiona Enter (Modo General):**
+   - **Sección 1 — Spamhaus (ZEN/DBL/HBL):** Extrae IPs del campo `H=` (host remoto) en el `mainlog` descartando la IP local `I=`, y genera el Top 10 más bloqueado.
+   - **Sección 2 — SURBL (Filtro de URLs Maliciosas):** Detecta dominios maliciosos embebidos en el cuerpo del correo (ej. acortadores `ow.ly`, `wa.me`).
+   - **Sección 3 — Invaluement:** Evalúa dominios/URLs de alto riesgo (ej. *snowshoe spam* o dominios recién registrados).
+   - **Sección 4 — SpamRL / Otras listas:** Genera el Top 10 de bloqueos en SpamRL y otras RBLs.
+   - **Sección 5 — Resumen:** Presenta el desglose cuantitativo global de eventos.
 
-**Sección 1 — Spamhaus (ZEN/DBL/HBL):**
-1. Busca `"spamhaus"`, `"zen"`, `"dbl"`, `"hbl"` en el mainlog
-2. Extrae la IP del **host remoto** con `sed` (campo `H=hostname [IP]`)
-3. Excluye la IP local del servidor (`I=[IP]`)
-4. Cuenta y muestra top 10
+#### Servicios de Reputación y Blacklists Evaluados
 
-**Sección 2 — Hostkarma (Yellow Listed):**
-1. Busca `"Yellow listed on Hostkarma"` en local_scan.log
-2. Cuenta las ocurrencias totales
-
-**Sección 3 — SpamRL / Otras listas:**
-1. Busca `"spamrl"`, `"listed on"` en el mainlog
-2. Extrae la IP del host remoto (mismo proceso que Spamhaus)
-3. Muestra top 10
-
-**Sección 4 — Resumen:**
-- Total de eventos Spamhaus
-- Total de advertencias Hostkarma
-- Total de eventos SpamRL
+| RBL / Servicio | Tipo de Bloqueo | ¿Qué analiza? |
+| :--- | :--- | :--- |
+| **Spamhaus** | **Reputación de IP y Dominio (RBL/DBL)** | Principal filtro contra spam masivo, botnets y servidores maliciosos. |
+| **SURBL** (`surbl.org`) | **URIBL (URLs en cuerpo de correo)** | Detecta enlaces a sitios web de spam/phishing dentro del cuerpo del mensaje (ej: acortadores `ow.ly`, `wa.me`). |
+| **SpamRL** (`spamrl.com`) | **Red Global SpamExperts** | Sistema de reputación dinámico y firmas propias de SpamExperts. |
+| **Invaluement** (`invaluement.com`) | **Filtro de Dominios/URLs de Alto Riesgo** | Especializado en *snowshoe spam*, suplantación de identidad y dominios recién registrados. |
 
 **Qué revela:**
-- IPs de atacantes recurrentes
-- Redes de spam organizadas
-- Posibles delistings necesarios si una IP legítima aparece listada
+- Eventos de rechazo detallados para una IP sospechosa o en auditoría.
+- IPs de atacantes recurrentes y redes de spam organizadas.
+- Confirmación de si una IP legítima requiere solicitar delisting en Spamhaus/SpamRL/SURBL.
 
-**Ejemplo de salida corregida:**
+**Ejemplo de salida (Búsqueda por IP):**
 ```
-🚫 Spamhaus (ZEN/DBL/HBL):
-  26 bloqueos - IP: 194.38.20.143
-  22 bloqueos - IP: 194.38.20.68
-  21 bloqueos - IP: 194.38.21.42
-  19 bloqueos - IP: 194.38.21.70
+🔍 Buscando eventos de RBLs para la IP: 194.38.20.143
 
-🟡 Hostkarma (Yellow Listed):
-  Total advertencias: 2938
+📋 Registros en Exim4 mainlog:
+⚠️  Se encontraron 26 bloqueo(s) por RBLs en Exim4 mainlog:
 
-🔴 SpamRL / Otras listas:
-  26 - IP: 194.38.20.143
-  22 - IP: 194.38.20.68
-  21 - IP: 194.38.21.42
+2026-04-06 00:01:21 [2810854] 1w9aDI-00BnEM-2p F=root@vps18.falesiaho.com H=vps18.falesiaho.com [194.38.20.143] I=[45.173.0.25]:25 P=esmtp rejected by local_scan(): The sending IP ( 194.38.20.143 ) is listed on Spamhaus ZEN. See https://check.spamhaus.org/
 ```
 
 ---
@@ -779,6 +775,6 @@ Uso interno. Proyecto de monitoreo y análisis de spam para servidores Exim4 + S
 
 ---
 
-> **Nota:** Este script está diseñado para funcionar en el servidor antispam directamente. No es una herramienta remota. Requiere acceso root y lectura de los logs del sistema.
+> **Nota:** Este script está diseñado para funcionar en el servidor antispam directamente. No es una herramienta remota. Requiere acceso root y lectura de los logs del sistema, se extrajo logs del sistema a modo de evaluar la herramienta que se encuentra en la herramienta Ejemplo-de-logs.
 # spamemonitor-app-ssh
 # spamemonitor-app-ssh
